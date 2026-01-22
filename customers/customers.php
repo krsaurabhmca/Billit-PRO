@@ -154,7 +154,7 @@ $indian_states = get_indian_states();
             
             <!-- Customer Type and Name -->
             <div class="form-row">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-4">
                     <label for="customer_type" class="form-label">Customer Type *</label>
                     <select id="customer_type" name="customer_type" class="form-control" required onchange="toggleGSTIN()">
                         <option value="B2C" <?php echo ($edit_customer && $edit_customer['customer_type'] === 'B2C') ? 'selected' : 'selected'; ?>>B2C (Retail)</option>
@@ -162,7 +162,7 @@ $indian_states = get_indian_states();
                     </select>
                 </div>
                 
-                <div class="form-group col-md-9">
+                <div class="form-group col-md-8">
                     <label for="customer_name" class="form-label">Customer Name *</label>
                     <input type="text" id="customer_name" name="customer_name" class="form-control" 
                            placeholder="Enter customer name"

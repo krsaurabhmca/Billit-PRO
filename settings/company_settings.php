@@ -29,20 +29,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $company_name = sanitize_sql($connection, $_POST['company_name']);
     $company_address = sanitize_sql($connection, $_POST['company_address']);
     $company_city = sanitize_sql($connection, $_POST['company_city']);
-    $company_state = sanitize_sql($connection, $_POST['company_state']);
     $company_state_code = sanitize_sql($connection, $_POST['company_state_code']);
+    
+    // Convert code to name securely
+    $states_list = get_indian_states();
+    if (isset($states_list[$company_state_code])) {
+        $company_state = $states_list[$company_state_code];
+    } else {
+        $company_state = sanitize_sql($connection, $_POST['company_state']);
+    }
+
     $company_pincode = sanitize_sql($connection, $_POST['company_pincode']);
     $company_gstin = sanitize_sql($connection, $_POST['company_gstin']);
     $company_pan = sanitize_sql($connection, $_POST['company_pan']);
     $company_phone = sanitize_sql($connection, $_POST['company_phone']);
     $company_email = sanitize_sql($connection, $_POST['company_email']);
     $invoice_prefix = sanitize_sql($connection, $_POST['invoice_prefix']);
+    $invoice_color = sanitize_sql($connection, $_POST['invoice_color']);
     $terms_conditions = sanitize_sql($connection, $_POST['terms_conditions']);
     $bank_name = sanitize_sql($connection, $_POST['bank_name']);
     $bank_account_number = sanitize_sql($connection, $_POST['bank_account_number']);
     $bank_ifsc = sanitize_sql($connection, $_POST['bank_ifsc']);
     $bank_branch = sanitize_sql($connection, $_POST['bank_branch']);
     
+    // Handle Logo Upload
+    $logo_path = '';
+    // Fetch existing logo if not updating
+    $existing_query = "SELECT company_logo FROM company_settings LIMIT 1";
+    $ex_res = db_fetch_one($connection, $existing_query);
+    if ($ex_res) $logo_path = $ex_res['company_logo'];
+
+    if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == 0) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $filename = $_FILES['company_logo']['name'];
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed)) {
+            $upload_dir = '../assets/uploads/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            
+            $new_filename = 'company_logo_' . time() . '.' . $ext;
+            $destination = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['company_logo']['tmp_name'], $destination)) {
+                $logo_path = 'assets/uploads/' . $new_filename; // Relative path for DB
+            }
+        }
+    }
+
     $has_error = false;
     
     // Validate GSTIN
@@ -55,6 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check if settings exist
         $check_query = "SELECT setting_id FROM company_settings LIMIT 1";
         $existing = db_fetch_one($connection, $check_query);
+        
+        // Escape paths
+        $logo_path_esc = sanitize_sql($connection, $logo_path);
         
         if ($existing) {
             // Update existing settings
@@ -69,7 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             company_pan = '{$company_pan}',
                             company_phone = '{$company_phone}',
                             company_email = '{$company_email}',
+                            company_logo = '{$logo_path_esc}',
                             invoice_prefix = '{$invoice_prefix}',
+                            invoice_color = '{$invoice_color}',
                             terms_conditions = '{$terms_conditions}',
                             bank_name = '{$bank_name}',
                             bank_account_number = '{$bank_account_number}',
@@ -78,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             WHERE setting_id = '{$existing['setting_id']}'";
             
             if (db_execute($connection, $update_query)) {
-                set_success_message("Company settings updated successfully!");
+                set_success_message("Company settings updated updated successfully!");
                 redirect($_SERVER['PHP_SELF']);
             } else {
                 set_error_message("Failed to update settings.");
@@ -87,12 +125,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insert new settings
             $insert_query = "INSERT INTO company_settings
                             (company_name, company_address, company_city, company_state, company_state_code,
-                             company_pincode, company_gstin, company_pan, company_phone, company_email,
-                             invoice_prefix, terms_conditions, bank_name, bank_account_number, bank_ifsc, bank_branch)
+                             company_pincode, company_gstin, company_pan, company_phone, company_email, company_logo,
+                             invoice_prefix, invoice_color, terms_conditions, bank_name, bank_account_number, bank_ifsc, bank_branch)
                             VALUES
                             ('{$company_name}', '{$company_address}', '{$company_city}', '{$company_state}',
                              '{$company_state_code}', '{$company_pincode}', '{$company_gstin}', '{$company_pan}',
-                             '{$company_phone}', '{$company_email}', '{$invoice_prefix}', '{$terms_conditions}',
+                             '{$company_phone}', '{$company_email}', '{$logo_path_esc}', 
+                             '{$invoice_prefix}', '{$invoice_color}', '{$terms_conditions}',
                              '{$bank_name}', '{$bank_account_number}', '{$bank_ifsc}', '{$bank_branch}')";
             
             if (db_execute($connection, $insert_query)) {
@@ -129,7 +168,7 @@ $indian_states = get_indian_states();
 <!-- ================================================================ -->
 <!-- SETTINGS FORM -->
 <!-- ================================================================ -->
-<form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+<form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" enctype="multipart/form-data">
     
     <!-- Company Information -->
     <div class="card">
@@ -161,7 +200,7 @@ $indian_states = get_indian_states();
                         <option value="">Select State</option>
                         <?php foreach ($indian_states as $code => $name): ?>
                             <option value="<?php echo $code; ?>" 
-                                    <?php echo ($settings && $settings['company_state_code'] === $code) ? 'selected' : ''; ?>>
+                                    <?php echo ($settings && $settings['company_state_code'] == $code) ? 'selected' : ''; ?>>
                                 <?php echo $code . ' - ' . $name; ?>
                             </option>
                         <?php endforeach; ?>
@@ -277,6 +316,35 @@ $indian_states = get_indian_states();
         </div>
     </div>
     
+    <!-- Branding Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Theme & Branding</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label class="form-label">Company Logo</label>
+                    <?php if(!empty($settings['company_logo'])): ?>
+                        <div style="margin-bottom:10px;">
+                            <img src="../<?php echo $settings['company_logo']; ?>" alt="Current Logo" style="height: 60px; border:1px solid #ddd; padding:5px; border-radius:4px;">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="company_logo" class="form-control" accept="image/*" style="height:auto; padding:8px;">
+                    <small class="text-muted">Upload PNG or JPG (Max height 80px recommended)</small>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Invoice Theme Color</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="color" name="invoice_color" class="form-control" style="width:100px; height:40px; padding:0; border:none; cursor:pointer;" 
+                               value="<?php echo $settings['invoice_color'] ?? '#2563eb'; ?>">
+                        <span class="text-muted">Select primary color for invoice headers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Submit Button -->
     <div class="card">
         <div class="card-body">

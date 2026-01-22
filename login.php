@@ -71,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['role'] = $user['role'];
                     $_SESSION['login_time'] = time();
                     
+                    // Log Login
+                    log_activity($connection, "Login", "User logged in successfully");
+                    
                     // Set success message
                     set_success_message("Welcome back, " . $user['full_name'] . "!");
                     
@@ -150,6 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         placeholder="Enter your password"
                         required
                     >
+                    <div style="text-align: right; margin-top: 5px;">
+                        <a href="forgot_password.php" style="font-size: 13px; color: var(--primary-color); text-decoration: none;">Forgot Password?</a>
+                    </div>
                 </div>
                 
                 <!-- Submit Button -->

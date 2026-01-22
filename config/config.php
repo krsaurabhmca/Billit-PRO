@@ -26,8 +26,16 @@ define('DB_NAME', 'inventory_management'); // Database name
 // Application name
 define('APP_NAME', 'Billit');
 
+// Developer Information
+define('DEV_NAME', 'OfferPlant Technologies');
+define('DEV_URL', 'https://offerplant.com');
+define('DEV_EMAIL', 'ask@offerplant.com');
+
 // Application version
 define('APP_VERSION', '1.0.0');
+
+// Menu Layout: 'top' or 'sidebar'
+define('MENU_LAYOUT', isset($_COOKIE['menu_layout']) ? $_COOKIE['menu_layout'] : 'sidebar');
 
 // Base URL (update this to match your installation path)
 define('BASE_URL', 'http://localhost/billit/');

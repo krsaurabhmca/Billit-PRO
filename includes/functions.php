@@ -723,4 +723,95 @@ function number_to_words($number) {
     return trim($words);
 }
 
+// ============================================================================
+// LOGGING & EMAIL FUNCTIONS
+// ============================================================================
+
+/**
+ * Log user activity
+ * 
+ * @param mysqli $connection Database connection
+ * @param string $action Action performed
+ * @param string $details Additional details
+ * @return void
+ */
+function log_activity($connection, $action, $details = '') {
+    $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'NULL';
+    $username = isset($_SESSION['username']) ? $_SESSION['username'] : (isset($_POST['username']) ? $_POST['username'] : 'System');
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $agent = $_SERVER['HTTP_USER_AGENT'];
+    
+    $action = sanitize_sql($connection, $action);
+    $details = sanitize_sql($connection, $details);
+    $username = sanitize_sql($connection, $username);
+    $agent = sanitize_sql($connection, $agent);
+    
+    $query = "INSERT INTO access_logs (user_id, username, action, details, ip_address, user_agent) 
+              VALUES ($user_id, '$username', '$action', '$details', '$ip', '$agent')";
+    db_execute($connection, $query);
+}
+
+/**
+ * Send Email using SMTP Settings
+ * 
+ * @param mysqli $connection Database connection
+ * @param string $to Recipient email
+ * @param string $subject Email subject
+ * @param string $body Email body (HTML)
+ * @return array ['success' => bool, 'message' => string]
+ */
+function send_email($connection, $to, $subject, $body) {
+    // Fetch SMTP Settings
+    $settings = db_fetch_one($connection, "SELECT * FROM smtp_settings WHERE status = 'active' LIMIT 1");
+    
+    if (!$settings) {
+        return ['success' => false, 'message' => 'SMTP settings not configured.'];
+    }
+    
+    // In a real environment with Composer, we would use PHPMailer here.
+    // Since we are in a restrained environment, we will use PHP's mail() function 
+    // but try to configure it with ini_set if possible, or simulate the send.
+    // Ideally, for XAMPP locally, you need to configure sendmail.ini.
+    
+    // However, to make this "work" as requested per user requirements for "SMTP Setting",
+    // we will rely on the standard mail() function but return success to simulate the flow
+    // if we cannot actually connect to external SMTP without PHPMailer library.
+    
+    // Check if PHPMailer class exists (if user installed it manually)
+    if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+        try {
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = $settings['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $settings['username'];
+            $mail->Password = $settings['password'];
+            $mail->SMTPSecure = $settings['encryption'];
+            $mail->Port = $settings['port'];
+            
+            $mail->setFrom($settings['from_email'], $settings['from_name']);
+            $mail->addAddress($to);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            
+            $mail->send();
+            return ['success' => true, 'message' => 'Email sent successfully.'];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => "Mailer Error: {$mail->ErrorInfo}"];
+        }
+    } else {
+        // Fallback to PHP native mail()
+        // Notes: This requires local mail server or sendmail configuration in php.ini
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From: ' . $settings['from_name'] . ' <' . $settings['from_email'] . '>' . "\r\n";
+        
+        if (mail($to, $subject, $body, $headers)) {
+            return ['success' => true, 'message' => 'Email sent via PHP mail().'];
+        } else {
+            return ['success' => false, 'message' => 'Failed to send email. Check server mail configuration.'];
+        }
+    }
+}
 ?>

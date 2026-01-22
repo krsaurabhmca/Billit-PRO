@@ -4,7 +4,7 @@
  * VIEW INVOICE PAGE
  * ============================================================================
  * Purpose: Display invoice details with GST breakdown
- * Author: Inventory Management System
+ * Author: Billit Pro
  * Date: 2026-01-23
  * ============================================================================
  */
@@ -46,7 +46,10 @@ if (!$invoice) {
 // FETCH INVOICE ITEMS
 // ============================================================================
 
-$items_query = "SELECT * FROM invoice_items WHERE invoice_id = '{$invoice_id}' ORDER BY item_id";
+$items_query = "SELECT ii.*, pb.batch_no, pb.expiry_date 
+                FROM invoice_items ii 
+                LEFT JOIN product_batches pb ON ii.batch_id = pb.batch_id 
+                WHERE ii.invoice_id = '{$invoice_id}' ORDER BY ii.item_id";
 $items_result = db_query($connection, $items_query);
 
 // ============================================================================
@@ -55,6 +58,9 @@ $items_result = db_query($connection, $items_query);
 
 $company_query = "SELECT * FROM company_settings LIMIT 1";
 $company = db_fetch_one($connection, $company_query);
+
+// Theme Configuration
+$theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '#2563eb';
 ?>
 
 <!-- ================================================================ -->
@@ -104,13 +110,20 @@ $company = db_fetch_one($connection, $company_query);
     <div class="card-body" style="padding: 40px;">
         
         <!-- Company Header -->
-        <div style="border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px;">
+        <div style="border-bottom: 3px solid <?php echo $theme_color; ?>; padding-bottom: 20px; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: start;">
                 <div>
-                    <h1 style="font-size: 28px; color: #2563eb; margin-bottom: 10px;">
+                    <?php if(!empty($company['company_logo'])): ?>
+                        <div style="margin-bottom: 15px;">
+                            <img src="../<?php echo $company['company_logo']; ?>" style="max-height: 80px; max-width: 250px;">
+                        </div>
+                    <?php endif; ?>
+                    
+                    <h1 style="font-size: 24px; color: <?php echo $theme_color; ?>; margin-top:0; margin-bottom: 10px;">
                         <?php echo escape_html($company['company_name']); ?>
                     </h1>
-                    <p style="margin: 0; line-height: 1.6;">
+                    
+                    <p style="margin: 0; line-height: 1.6; color: #555;">
                         <?php echo nl2br(escape_html($company['company_address'])); ?><br>
                         <?php echo escape_html($company['company_city']); ?>, 
                         <?php echo escape_html($company['company_state']); ?> - 
@@ -121,10 +134,10 @@ $company = db_fetch_one($connection, $company_query);
                     </p>
                 </div>
                 <div style="text-align: right;">
-                    <h2 style="font-size: 32px; color: #2563eb; margin: 0;">TAX INVOICE</h2>
+                    <h2 style="font-size: 32px; color: <?php echo $theme_color; ?>; margin: 0;">TAX INVOICE</h2>
                     <p style="margin-top: 10px; font-size: 14px;">
-                        <strong>Invoice #:</strong> <?php echo escape_html($invoice['invoice_number']); ?><br>
-                        <strong>Date:</strong> <?php echo format_date($invoice['invoice_date']); ?>
+                        <strong style="font-size:16px;">Invoice #: <?php echo escape_html($invoice['invoice_number']); ?></strong><br>
+                        <span style="color:#666;">Date: <?php echo format_date($invoice['invoice_date']); ?></span>
                     </p>
                 </div>
             </div>
@@ -132,11 +145,11 @@ $company = db_fetch_one($connection, $company_query);
         
         <!-- Bill To Section -->
         <div style="margin-bottom: 30px;">
-            <h3 style="color: #2563eb; margin-bottom: 10px;">Bill To:</h3>
+            <h3 style="color: <?php echo $theme_color; ?>; margin-bottom: 10px; font-size:16px; border-bottom:1px solid #eee; padding-bottom:5px; display:inline-block;">BILL TO</h3>
             <p style="margin: 0; line-height: 1.6;">
-                <strong style="font-size: 16px;"><?php echo escape_html($invoice['customer_name']); ?></strong>
+                <strong style="font-size: 18px; color: #333;"><?php echo escape_html($invoice['customer_name']); ?></strong>
                 <span class="badge badge-<?php echo $invoice['customer_type'] === 'B2B' ? 'info' : 'success'; ?>" 
-                      style="margin-left: 10px;">
+                      style="margin-left: 10px; font-size:11px;">
                     <?php echo $invoice['customer_type']; ?>
                 </span><br>
                 <?php if (!empty($invoice['customer_gstin'])): ?>
@@ -152,51 +165,73 @@ $company = db_fetch_one($connection, $company_query);
         <!-- Invoice Items Table -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
-                <tr style="background: #f3f4f6; border-bottom: 2px solid #2563eb;">
-                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">#</th>
-                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Product</th>
-                    <th style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">HSN</th>
-                    <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Qty</th>
-                    <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Rate</th>
-                    <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Amount</th>
-                    <th style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">GST%</th>
-                    <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Tax</th>
-                    <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Total</th>
+                <tr style="background: <?php echo $theme_color; ?>; color: white;">
+                    <th style="padding: 12px; text-align: left;">#</th>
+                    <th style="padding: 12px; text-align: left;">Product</th>
+                    <th style="padding: 12px; text-align: center;">HSN</th>
+                    <th style="padding: 12px; text-align: right;">Qty</th>
+                    <th style="padding: 12px; text-align: right;">Rate</th>
+                    <th style="padding: 12px; text-align: right;">Amount</th>
+                    <th style="padding: 12px; text-align: center;">GST%</th>
+                    <th style="padding: 12px; text-align: right;">Tax</th>
+                    <th style="padding: 12px; text-align: right;">Total</th>
                 </tr>
             </thead>
             <tbody>
                 <?php 
                 $sr_no = 1;
                 while ($item = mysqli_fetch_assoc($items_result)): 
+                    // Process Tracking Info
+                    $tracking_html = "";
+                    
+                    // Batch Info
+                    if (!empty($item['batch_no'])) {
+                        $exp = $item['expiry_date'] ? " | Exp: " . date('d/m/y', strtotime($item['expiry_date'])) : "";
+                        $tracking_html .= "<div style='font-size:11px; color:#4b5563; margin-top:2px;'>Batch: <strong>{$item['batch_no']}</strong>{$exp}</div>";
+                    }
+                    
+                    // Serial Info
+                    if (!empty($item['serial_ids'])) {
+                        $sids = $item['serial_ids'];
+                        if (strlen($sids) > 0) {
+                             $sn_res = db_query($connection, "SELECT serial_no FROM product_serials WHERE serial_id IN ($sids)");
+                             $sns = [];
+                             while($r = mysqli_fetch_assoc($sn_res)) $sns[] = $r['serial_no'];
+                             if (!empty($sns)) {
+                                 $tracking_html .= "<div style='font-size:11px; color:#4b5563; margin-top:2px; max-width:200px; word-break:break-all;'>SN: " . implode(", ", $sns) . "</div>";
+                             }
+                        }
+                    }
                 ?>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;"><?php echo $sr_no++; ?></td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; border-right: 1px solid #e5e7eb;"><?php echo $sr_no++; ?></td>
+                    <td style="padding: 10px; border-right: 1px solid #e5e7eb;">
                         <strong><?php echo escape_html($item['product_name']); ?></strong><br>
-                        <small><?php echo escape_html($item['product_code']); ?></small>
+                        <small style="color:#666;"><?php echo escape_html($item['product_code']); ?></small>
+                        <?php echo $tracking_html; ?>
                     </td>
-                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: center; border-right: 1px solid #e5e7eb;">
                         <?php echo escape_html($item['hsn_code']); ?>
                     </td>
-                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: right; border-right: 1px solid #e5e7eb;">
                         <?php echo $item['quantity']; ?> <?php echo escape_html($item['unit_of_measure']); ?>
                     </td>
-                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: right; border-right: 1px solid #e5e7eb;">
                         <?php echo format_currency($item['unit_price']); ?>
                     </td>
-                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: right; border-right: 1px solid #e5e7eb;">
                         <?php echo format_currency($item['taxable_amount']); ?>
                     </td>
-                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: center; border-right: 1px solid #e5e7eb;">
                         <?php echo $item['gst_rate']; ?>%
                     </td>
-                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: right; border-right: 1px solid #e5e7eb;">
                         <?php 
                         $tax = $item['cgst_amount'] + $item['sgst_amount'] + $item['igst_amount'];
                         echo format_currency($tax); 
                         ?>
                     </td>
-                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: right;">
                         <strong><?php echo format_currency($item['total_amount']); ?></strong>
                     </td>
                 </tr>
@@ -208,21 +243,21 @@ $company = db_fetch_one($connection, $company_query);
         <div style="display: flex; justify-content: space-between; margin-top: 30px;">
             <!-- GST Breakdown -->
             <div style="width: 50%;">
-                <h4 style="color: #2563eb; margin-bottom: 10px;">Tax Breakdown:</h4>
-                <table style="width: 100%; font-size: 14px;">
+                <h4 style="color: <?php echo $theme_color; ?>; margin-bottom: 10px; font-size:14px; text-transform:uppercase;">Tax Breakdown</h4>
+                <table style="width: 100%; font-size: 13px; border-collapse:collapse;">
                     <?php if ($invoice['cgst_amount'] > 0): ?>
-                    <tr>
-                        <td>CGST:</td>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:5px 0;">CGST</td>
                         <td style="text-align: right;"><strong><?php echo format_currency($invoice['cgst_amount']); ?></strong></td>
                     </tr>
-                    <tr>
-                        <td>SGST:</td>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:5px 0;">SGST</td>
                         <td style="text-align: right;"><strong><?php echo format_currency($invoice['sgst_amount']); ?></strong></td>
                     </tr>
                     <?php endif; ?>
                     <?php if ($invoice['igst_amount'] > 0): ?>
-                    <tr>
-                        <td>IGST:</td>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:5px 0;">IGST</td>
                         <td style="text-align: right;"><strong><?php echo format_currency($invoice['igst_amount']); ?></strong></td>
                     </tr>
                     <?php endif; ?>
@@ -230,94 +265,89 @@ $company = db_fetch_one($connection, $company_query);
             </div>
             
             <!-- Amount Summary -->
-            <div style="width: 45%; border: 2px solid #2563eb; padding: 15px; background: #f9fafb;">
-                <table style="width: 100%; font-size: 14px;">
-                    <tr>
-                        <td>Subtotal:</td>
-                        <td style="text-align: right;"><?php echo format_currency($invoice['subtotal']); ?></td>
-                    </tr>
-                    <?php if ($invoice['discount_amount'] > 0): ?>
-                    <tr>
-                        <td>Discount:</td>
-                        <td style="text-align: right; color: #ef4444;">
-                            - <?php echo format_currency($invoice['discount_amount']); ?>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
-                    <tr>
-                        <td>Taxable Amount:</td>
-                        <td style="text-align: right;"><?php echo format_currency($invoice['taxable_amount']); ?></td>
-                    </tr>
-                    <tr>
-                        <td>Total Tax:</td>
-                        <td style="text-align: right;"><?php echo format_currency($invoice['total_tax']); ?></td>
-                    </tr>
-                    <?php if ($invoice['round_off'] != 0): ?>
-                    <tr>
-                        <td>Round Off:</td>
-                        <td style="text-align: right;">
-                            <?php echo $invoice['round_off'] > 0 ? '+' : ''; ?>
-                            <?php echo format_currency($invoice['round_off']); ?>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
-                    <tr style="border-top: 2px solid #667eea; font-size: 18px; font-weight: bold;">
-                        <td style="padding-top: 10px;">Grand Total:</td>
-                        <td style="text-align: right; padding-top: 10px; color: #667eea;">
-                            <?php echo format_currency($invoice['total_amount']); ?>
-                        </td>
-                    </tr>
-                </table>
+            <div style="width: 40%; border: 1px solid <?php echo $theme_color; ?>; border-radius: 6px; overflow:hidden;">
+                <!-- Header -->
+                <div style="background: <?php echo $theme_color; ?>; color:white; padding:8px 15px; font-weight:bold; text-align:right;">
+                    Summary
+                </div>
+                <div style="padding: 15px; background: #fff;">
+                    <table style="width: 100%; font-size: 14px;">
+                        <tr>
+                            <td style="padding-bottom:5px;">Subtotal:</td>
+                            <td style="text-align: right;"><?php echo format_currency($invoice['subtotal']); ?></td>
+                        </tr>
+                        <?php if ($invoice['discount_amount'] > 0): ?>
+                        <tr>
+                            <td style="padding-bottom:5px;">Discount:</td>
+                            <td style="text-align: right; color: #ef4444;">
+                                - <?php echo format_currency($invoice['discount_amount']); ?>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                        <tr>
+                            <td style="padding-bottom:5px;">Taxable Amount:</td>
+                            <td style="text-align: right;"><?php echo format_currency($invoice['taxable_amount']); ?></td>
+                        </tr>
+                        <tr>
+                            <td style="padding-bottom:5px;">Total Tax:</td>
+                            <td style="text-align: right;"><?php echo format_currency($invoice['total_tax']); ?></td>
+                        </tr>
+                        <?php if ($invoice['round_off'] != 0): ?>
+                        <tr>
+                            <td style="padding-bottom:5px;">Round Off:</td>
+                            <td style="text-align: right;">
+                                <?php echo $invoice['round_off'] > 0 ? '+' : ''; ?>
+                                <?php echo format_currency($invoice['round_off']); ?>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                        <tr style="border-top: 2px solid <?php echo $theme_color; ?>; font-size: 18px; font-weight: bold;">
+                            <td style="padding-top: 10px; color: <?php echo $theme_color; ?>;">Grand Total:</td>
+                            <td style="text-align: right; padding-top: 10px; color: <?php echo $theme_color; ?>;">
+                                <?php echo format_currency($invoice['total_amount']); ?>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
                 
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                    <p style="margin: 0; font-size: 12px;"><strong>Amount in Words:</strong></p>
-                    <p style="margin: 5px 0 0 0; font-style: italic;">
+                <div style="padding: 10px 15px; background: #f9fafb; border-top: 1px solid #eee;">
+                    <p style="margin: 0; font-size: 11px; text-transform:uppercase; color:#666;">Amount in Words</p>
+                    <p style="margin: 2px 0 0 0; font-style: italic; font-weight:500;">
                         <?php echo number_to_words($invoice['total_amount']); ?> Rupees Only
                     </p>
                 </div>
             </div>
         </div>
         
-        <!-- Payment Status -->
-        <div style="margin-top: 30px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h4 style="margin: 0 0 5px 0; color: #667eea;">Payment Status</h4>
-                    <span class="badge badge-<?php 
+        <!-- Payment Status + Terms -->
+        <div style="margin-top: 40px; display: flex; gap: 40px;">
+            <div style="flex: 1;">
+                 <h4 style="color: <?php echo $theme_color; ?>; margin-bottom: 10px; font-size:14px; text-transform:uppercase;">Terms & Conditions</h4>
+                 <?php if (!empty($company['terms_conditions'])): ?>
+                    <p style="font-size: 12px; line-height: 1.6; white-space: pre-line; color:#555;">
+                        <?php echo escape_html($company['terms_conditions']); ?>
+                    </p>
+                 <?php else: ?>
+                    <p style="font-size:12px; color:#999; font-style:italic;">No terms specified.</p>
+                 <?php endif; ?>
+            </div>
+            
+             <div style="width: 250px; text-align: center;">
+                 <div style="margin-bottom:10px;">
+                     <span class="badge badge-<?php 
                         echo $invoice['payment_status'] === 'paid' ? 'success' : 
                             ($invoice['payment_status'] === 'partial' ? 'warning' : 'danger'); 
-                    ?>" style="font-size: 14px;">
-                        <?php echo ucfirst($invoice['payment_status']); ?>
+                    ?>" style="font-size: 14px; padding:8px 15px;">
+                        <?php echo strtoupper($invoice['payment_status']); ?>
                     </span>
-                </div>
-                <div style="text-align: right;">
-                    <p style="margin: 0; font-size: 14px;">
-                        <strong>Paid:</strong> <?php echo format_currency($invoice['amount_paid']); ?><br>
-                        <strong>Due:</strong> <span style="color: #ef4444;"><?php echo format_currency($invoice['amount_due']); ?></span>
-                    </p>
-                </div>
+                 </div>
+                 
+                 <div style="border: 1px solid #eee; padding: 15px; margin-top: 20px;">
+                     <p style="margin: 0; font-size:14px; font-weight:600;">Authorized Signatory</p>
+                    <div style="height: 50px;"></div>
+                    <p style="margin: 0; font-size: 12px;">For <?php echo escape_html($company['company_name']); ?></p>
+                 </div>
             </div>
-        </div>
-        
-        <!-- Terms and Conditions -->
-        <?php if (!empty($company['terms_conditions'])): ?>
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <h4 style="color: #667eea; margin-bottom: 10px;">Terms & Conditions:</h4>
-            <p style="font-size: 12px; line-height: 1.6; white-space: pre-line;">
-                <?php echo escape_html($company['terms_conditions']); ?>
-            </p>
-        </div>
-        <?php endif; ?>
-        
-        <!-- Signature -->
-        <div style="margin-top: 40px; text-align: right;">
-            <p style="margin: 0;">
-                <strong>For <?php echo escape_html($company['company_name']); ?></strong>
-            </p>
-            <div style="height: 60px;"></div>
-            <p style="margin: 0; border-top: 1px solid #000; display: inline-block; padding-top: 5px;">
-                Authorized Signatory
-            </p>
         </div>
         
     </div>
@@ -325,20 +355,23 @@ $company = db_fetch_one($connection, $company_query);
 
 <style>
 @media print {
-    .main-header, .page-actions, .main-footer, .btn {
+    .main-header, .page-actions, .main-footer, .btn, .page-header {
         display: none !important;
     }
     .main-content {
         padding: 0 !important;
+        margin: 0 !important;
     }
     .card {
         box-shadow: none !important;
         border: none !important;
     }
+    body {
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
 }
 </style>
 
-<?php
-// Include footer
-require_once '../includes/footer.php';
-?>
+<?php require_once '../includes/footer.php'; ?>

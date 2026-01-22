@@ -1,0 +1,3 @@
+customer_name,customer_type,contact_person,email,phone,gstin,pan,billing_address,billing_city,billing_state,billing_pincode,status
+"Acme Corp",B2B,Robert Brown,robert@acme.com,9988776655,27ABCDE1234F1Z5,ABCDE1234F,"101 Business Hub",Mumbai,Maharashtra,400001,active
+"John Doe",B2C,,john@gmail.com,9988776600,,,"Flat 123",Pune,Maharashtra,411001,active

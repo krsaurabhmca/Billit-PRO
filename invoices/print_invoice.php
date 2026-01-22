@@ -1,36 +1,26 @@
 <?php
 /**
  * ============================================================================
- * GENERATE PDF INVOICE
+ * PRINT INVOICE PAGE
  * ============================================================================
- * Purpose: Generate printable HTML invoice that can be saved as PDF
- * Author: Inventory Management System
+ * Purpose: Printable Invoice with Custom Branding
+ * Author: Billit Pro
  * Date: 2026-01-23
- * Note: Uses browser print function to save as PDF
  * ============================================================================
  */
 
-// Include configuration and functions
 require_once '../config/config.php';
 require_once '../includes/functions.php';
 
-// Require login
 require_login();
 
-// ============================================================================
-// GET INVOICE ID
-// ============================================================================
-
+// 1. GET INVOICE ID
 if (!isset($_GET['id']) || !validate_numeric($_GET['id'])) {
     die("Invalid invoice ID.");
 }
-
 $invoice_id = sanitize_sql($connection, $_GET['id']);
 
-// ============================================================================
-// FETCH INVOICE DATA
-// ============================================================================
-
+// 2. FETCH INVOICE
 $invoice_query = "SELECT i.*, c.customer_name, c.customer_type, c.gstin as customer_gstin,
                   c.billing_address, c.billing_city, c.billing_state, c.billing_pincode
                   FROM invoices i
@@ -38,17 +28,21 @@ $invoice_query = "SELECT i.*, c.customer_name, c.customer_type, c.gstin as custo
                   WHERE i.invoice_id = '{$invoice_id}' LIMIT 1";
 $invoice = db_fetch_one($connection, $invoice_query);
 
-if (!$invoice) {
-    die("Invoice not found.");
-}
+if (!$invoice) die("Invoice not found.");
 
-// Fetch invoice items
-$items_query = "SELECT * FROM invoice_items WHERE invoice_id = '{$invoice_id}' ORDER BY item_id";
+// 3. FETCH ITEMS WITH TRACKING
+$items_query = "SELECT ii.*, pb.batch_no, pb.expiry_date 
+                FROM invoice_items ii 
+                LEFT JOIN product_batches pb ON ii.batch_id = pb.batch_id 
+                WHERE ii.invoice_id = '{$invoice_id}' ORDER BY ii.item_id";
 $items_result = db_query($connection, $items_query);
 
-// Fetch company settings
+// 4. FETCH COMPANY SETTINGS
 $company_query = "SELECT * FROM company_settings LIMIT 1";
 $company = db_fetch_one($connection, $company_query);
+
+// Theme Color
+$theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '#2563eb';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,527 +51,240 @@ $company = db_fetch_one($connection, $company_query);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice <?php echo escape_html($invoice['invoice_number']); ?></title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        @page { margin: 0; size: A4; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.4; color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.5;
-            color: #333;
-            background: #fff;
-        }
+        .invoice-container { width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 15mm; position: relative; }
         
-        .invoice-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px;
-        }
+        /* Flex Utils */
+        .row { display: flex; width: 100%; justify-content: space-between; }
+        .col-6 { width: 48%; }
+        .col-12 { width: 100%; }
         
-        /* Header */
-        .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 20px;
-            margin-bottom: 25px;
-        }
+        /* Header Section */
+        .header-section { margin-bottom: 30px; border-bottom: 2px solid <?php echo $theme_color; ?>; padding-bottom: 15px; }
+        .logo-area { display: flex; align-items: start; }
+        .logo-area img { max-height: 80px; max-width: 250px; }
         
-        .company-info h1 {
-            font-size: 24px;
-            color: #2563eb;
-            margin-bottom: 8px;
-        }
+        .company-details { text-align: right; }
+        .company-name { font-size: 24px; font-weight: 700; color: <?php echo $theme_color; ?>; margin: 0 0 5px 0; text-transform: uppercase; }
+        .company-meta { font-size: 11px; color: #555; line-height: 1.5; }
         
-        .company-info p {
-            font-size: 11px;
-            line-height: 1.6;
-            color: #555;
-        }
+        /* Info Section */
+        .info-section { margin-bottom: 25px; }
+        .section-title { color: <?php echo $theme_color; ?>; font-size: 12px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 8px; }
         
-        .invoice-title {
-            text-align: right;
-        }
+        .bill-to p { margin: 0; font-size: 13px; line-height: 1.5; }
+        .bill-to strong { font-size: 15px; }
         
-        .invoice-title h2 {
-            font-size: 28px;
-            color: #2563eb;
-            margin-bottom: 10px;
-        }
+        .invoice-details { text-align: right; }
+        .detail-row { display: flex; justify-content: flex-end; margin-bottom: 3px; }
+        .detail-label { color: #666; width: 100px; font-size: 12px; }
+        .detail-value { font-weight: 600; font-size: 13px; }
         
-        .invoice-title .invoice-meta {
-            font-size: 12px;
-        }
+        /* Table */
+        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .main-table th { background-color: <?php echo $theme_color; ?>; color: white; padding: 8px 10px; text-align: left; font-size: 12px; text-transform: uppercase; }
+        .main-table td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: top; }
+        .main-table .text-right { text-align: right; }
+        .main-table .text-center { text-align: center; }
         
-        .invoice-title .invoice-meta strong {
-            color: #333;
-        }
+        .tracking-info { font-size: 10px; color: #666; margin-top: 2px; }
         
-        /* Bill To Section */
-        .bill-to {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-        }
+        /* Footer Split */
+        .footer-split { display: flex; justify-content: space-between; margin-top: 10px; }
+        .footer-left { width: 55%; }
+        .footer-right { width: 40%; }
         
-        .bill-to h3 {
-            font-size: 12px;
-            color: #2563eb;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* Summary Box */
+        .summary-box { background: #f9fafb; padding: 15px; border-radius: 6px; border: 1px solid <?php echo $theme_color; ?>; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+        .summary-row.total { font-size: 16px; font-weight: 700; color: <?php echo $theme_color; ?>; border-top: 2px solid <?php echo $theme_color; ?>; padding-top: 10px; margin-top: 5px; }
         
-        .bill-to .customer-name {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
+        .amount-words { font-size: 11px; font-style: italic; color: #666; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 5px; }
         
-        .customer-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: #2563eb;
-            color: white;
-            font-size: 10px;
-            border-radius: 10px;
-            margin-left: 8px;
-        }
-        
-        /* Items Table */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-        }
-        
-        .items-table th {
-            background: #2563eb;
-            color: white;
-            padding: 10px 12px;
-            text-align: left;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .items-table th:last-child,
-        .items-table td:last-child {
-            text-align: right;
-        }
-        
-        .items-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .items-table tbody tr:hover {
-            background: #f9fafb;
-        }
-        
-        .product-name {
-            font-weight: 600;
-        }
-        
-        .product-code {
-            font-size: 10px;
-            color: #6b7280;
-        }
-        
-        /* Summary Section */
-        .summary-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 25px;
-        }
-        
-        .tax-breakdown {
-            width: 45%;
-        }
-        
-        .tax-breakdown h4 {
-            font-size: 12px;
-            color: #2563eb;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .tax-breakdown table {
-            width: 100%;
-            font-size: 11px;
-        }
-        
-        .tax-breakdown td {
-            padding: 4px 0;
-        }
-        
-        .totals-box {
-            width: 45%;
-            background: #f8fafc;
-            border: 2px solid #2563eb;
-            border-radius: 8px;
-            padding: 15px;
-        }
-        
-        .totals-box table {
-            width: 100%;
-            font-size: 12px;
-        }
-        
-        .totals-box td {
-            padding: 5px 0;
-        }
-        
-        .totals-box .grand-total {
-            border-top: 2px solid #2563eb;
-            font-size: 16px;
-            font-weight: 700;
-            color: #2563eb;
-        }
-        
-        .totals-box .grand-total td {
-            padding-top: 10px;
-        }
-        
-        .amount-words {
-            font-size: 11px;
-            font-style: italic;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        /* Bank Details */
-        .bank-details {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-        }
-        
-        .bank-details h4 {
-            font-size: 12px;
-            color: #2563eb;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .bank-details table {
-            font-size: 11px;
-        }
-        
-        .bank-details td {
-            padding: 3px 15px 3px 0;
-        }
-        
-        /* Terms */
-        .terms {
-            margin-bottom: 25px;
-        }
-        
-        .terms h4 {
-            font-size: 12px;
-            color: #2563eb;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .terms p {
-            font-size: 10px;
-            color: #6b7280;
-            white-space: pre-line;
-        }
+        /* Bank & Terms */
+        .bank-info { background: #f8fafc; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; font-size: 11px; border-left: 3px solid <?php echo $theme_color; ?>; }
+        .terms p { font-size: 10px; color: #666; white-space: pre-line; margin: 0; }
         
         /* Signature */
-        .signature {
-            text-align: right;
-            margin-top: 40px;
-        }
+        .signature-box { margin-top: 40px; text-align: right; }
+        .auth-sign { display: inline-block; border-top: 1px solid #333; width: 180px; padding-top: 5px; font-size: 11px; font-weight: 600; }
         
-        .signature-line {
-            display: inline-block;
-            width: 200px;
-            border-top: 1px solid #333;
-            padding-top: 5px;
-            font-size: 11px;
-        }
-        
-        /* Print Button */
-        .print-actions {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-        
-        .btn-print {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        
-        .btn-print:hover {
-            background: #1d4ed8;
-        }
-        
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            margin-left: 10px;
-        }
-        
+        /* Print Hide */
         @media print {
-            .print-actions {
-                display: none !important;
-            }
-            
-            body {
-                background: white;
-            }
-            
-            .invoice-container {
-                padding: 0;
-                max-width: 100%;
-            }
+            .no-print { display: none !important; }
+            .invoice-container { box-shadow: none; margin: 0; padding: 15mm; }
         }
+        
+        .btn-print { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-    <!-- Print Actions -->
-    <div class="print-actions">
-        <button class="btn-print" onclick="window.print()">
-            🖨️ Print / Save PDF
-        </button>
-        <a href="view_invoice.php?id=<?php echo $invoice_id; ?>" class="btn-back">
-            ← Back
-        </a>
-    </div>
+    <a href="javascript:window.print()" class="no-print btn-print">🖨️ Print Invoice</a>
 
     <div class="invoice-container">
-        <!-- Header -->
-        <div class="invoice-header">
-            <div class="company-info">
-                <h1><?php echo escape_html($company['company_name']); ?></h1>
-                <p>
-                    <?php echo nl2br(escape_html($company['company_address'])); ?><br>
-                    <?php echo escape_html($company['company_city']); ?>, 
-                    <?php echo escape_html($company['company_state']); ?> - 
-                    <?php echo escape_html($company['company_pincode']); ?><br>
-                    <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
-                    <strong>Phone:</strong> <?php echo escape_html($company['company_phone']); ?> | 
-                    <strong>Email:</strong> <?php echo escape_html($company['company_email']); ?>
-                </p>
-            </div>
-            <div class="invoice-title">
-                <h2>TAX INVOICE</h2>
-                <div class="invoice-meta">
-                    <strong>Invoice #:</strong> <?php echo escape_html($invoice['invoice_number']); ?><br>
-                    <strong>Date:</strong> <?php echo format_date($invoice['invoice_date']); ?><br>
-                    <strong>Status:</strong> 
-                    <?php if ($invoice['payment_status'] === 'paid'): ?>
-                        <span style="color: #059669;">PAID</span>
-                    <?php elseif ($invoice['payment_status'] === 'partial'): ?>
-                        <span style="color: #d97706;">PARTIAL</span>
-                    <?php else: ?>
-                        <span style="color: #dc2626;">UNPAID</span>
+        <!-- 1. Header Row -->
+        <div class="header-section">
+            <div class="row">
+                <div class="col-3 logo-area">
+                    <?php if(!empty($company['company_logo'])): ?>
+                        <img src="../<?php echo $company['company_logo']; ?>" alt="Logo">
                     <?php endif; ?>
+                </div>
+                <div class="col-9 company-details">
+                    <div class="company-name"><?php echo escape_html($company['company_name']); ?></div>
+                    <div class="company-meta">
+                        <?php echo nl2br(escape_html($company['company_address'])); ?><br>
+                        <?php echo escape_html($company['company_city']); ?>, <?php echo escape_html($company['company_state']); ?><br>
+                        <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
+                        Phone: <?php echo escape_html($company['company_phone']); ?>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Bill To -->
-        <div class="bill-to">
-            <h3>Bill To</h3>
-            <div class="customer-name">
-                <?php echo escape_html($invoice['customer_name']); ?>
-                <span class="customer-badge"><?php echo $invoice['customer_type']; ?></span>
+        <!-- 2. Info Row -->
+        <div class="info-section">
+            <div class="row">
+                <div class="col-6 bill-to">
+                    <div class="section-title">Bill To</div>
+                    <p>
+                        <strong><?php echo escape_html($invoice['customer_name']); ?></strong><br>
+                        <?php echo nl2br(escape_html($invoice['customer_address'])); ?><br>
+                        <?php echo escape_html($invoice['billing_city']); ?>, <?php echo escape_html($invoice['billing_state']); ?><br>
+                        <?php if(!empty($invoice['customer_gstin'])): ?>
+                            <strong>GSTIN:</strong> <?php echo escape_html($invoice['customer_gstin']); ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div class="col-6 invoice-details">
+                    <div class="section-title" style="text-align:right;">Invoice Details</div>
+                    <div class="detail-row">
+                        <span class="detail-label">Invoice No:</span>
+                        <span class="detail-value"><?php echo escape_html($invoice['invoice_number']); ?></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value"><?php echo format_date($invoice['invoice_date']); ?></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" style="text-transform:uppercase;"><?php echo $invoice['payment_status']; ?></span>
+                    </div>
+                </div>
             </div>
-            <?php if (!empty($invoice['customer_gstin'])): ?>
-                <strong>GSTIN:</strong> <?php echo escape_html($invoice['customer_gstin']); ?><br>
-            <?php endif; ?>
-            <?php echo nl2br(escape_html($invoice['customer_address'])); ?><br>
-            <?php echo escape_html($invoice['billing_city']); ?>, 
-            <?php echo escape_html($invoice['billing_state']); ?> - 
-            <?php echo escape_html($invoice['billing_pincode']); ?>
         </div>
         
-        <!-- Items Table -->
-        <table class="items-table">
+        <!-- 3. Table -->
+        <table class="main-table">
             <thead>
                 <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 30%;">Product</th>
-                    <th style="width: 10%;">HSN</th>
-                    <th style="width: 10%;">Qty</th>
-                    <th style="width: 12%;">Rate</th>
-                    <th style="width: 12%;">Amount</th>
-                    <th style="width: 8%;">GST%</th>
-                    <th style="width: 13%;">Total</th>
+                    <th style="width:5%;">#</th>
+                    <th style="width:35%;">Product</th>
+                    <th style="width:10%;" class="text-center">HSN</th>
+                    <th style="width:10%;" class="text-right">Qty</th>
+                    <th style="width:10%;" class="text-right">Rate</th>
+                    <th style="width:5%;" class="text-center">GST</th>
+                    <th style="width:10%;" class="text-right">Tax</th>
+                    <th style="width:15%;" class="text-right">Total</th>
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                $sr_no = 1;
-                while ($item = mysqli_fetch_assoc($items_result)): 
-                    $tax = $item['cgst_amount'] + $item['sgst_amount'] + $item['igst_amount'];
+                <?php $sr=1; while($item = mysqli_fetch_assoc($items_result)): 
+                        $tracking_html = "";
+                        if (!empty($item['batch_no'])) {
+                            $exp = $item['expiry_date'] ? " Exp:".date('d/m/y', strtotime($item['expiry_date'])) : "";
+                            $tracking_html .= "<div>Batch:{$item['batch_no']}{$exp}</div>";
+                        }
+                        if (!empty($item['serial_ids'])) {
+                             // Quick fetch for Print efficiency (or could join)
+                             // Re-using logic:
+                             if(strlen($item['serial_ids'])>0) {
+                                $sn_res = db_query($connection, "SELECT serial_no FROM product_serials WHERE serial_id IN ({$item['serial_ids']})");
+                                $sns = [];
+                                while($r=mysqli_fetch_assoc($sn_res))$sns[]=$r['serial_no'];
+                                if($sns) $tracking_html .= "<div>SN: ".implode(", ",$sns)."</div>";
+                             }
+                        }
+                        
+                        $tax_amt = $item['cgst_amount'] + $item['sgst_amount'] + $item['igst_amount'];
                 ?>
                 <tr>
-                    <td><?php echo $sr_no++; ?></td>
+                    <td><?php echo $sr++; ?></td>
                     <td>
-                        <div class="product-name"><?php echo escape_html($item['product_name']); ?></div>
-                        <div class="product-code"><?php echo escape_html($item['product_code']); ?></div>
+                        <strong><?php echo escape_html($item['product_name']); ?></strong>
+                        <div class="tracking-info"><?php echo $tracking_html; ?></div>
                     </td>
-                    <td><?php echo escape_html($item['hsn_code']); ?></td>
-                    <td><?php echo $item['quantity']; ?> <?php echo escape_html($item['unit_of_measure']); ?></td>
-                    <td>₹<?php echo number_format($item['unit_price'], 2); ?></td>
-                    <td>₹<?php echo number_format($item['taxable_amount'], 2); ?></td>
-                    <td><?php echo $item['gst_rate']; ?>%</td>
-                    <td><strong>₹<?php echo number_format($item['total_amount'], 2); ?></strong></td>
+                    <td class="text-center"><?php echo escape_html($item['hsn_code']); ?></td>
+                    <td class="text-right"><?php echo $item['quantity']; ?></td>
+                    <td class="text-right"><?php echo format_currency($item['unit_price']); ?></td>
+                    <td class="text-center"><?php echo $item['gst_rate']; ?>%</td>
+                    <td class="text-right"><?php echo format_currency($tax_amt); ?></td>
+                    <td class="text-right"><strong><?php echo format_currency($item['total_amount']); ?></strong></td>
                 </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
         
-        <!-- Summary Section -->
-        <div class="summary-section">
-            <!-- Tax Breakdown -->
-            <div class="tax-breakdown">
-                <h4>Tax Breakdown</h4>
-                <table>
-                    <?php if ($invoice['cgst_amount'] > 0): ?>
-                    <tr>
-                        <td>CGST:</td>
-                        <td style="text-align: right;"><strong>₹<?php echo number_format($invoice['cgst_amount'], 2); ?></strong></td>
-                    </tr>
-                    <tr>
-                        <td>SGST:</td>
-                        <td style="text-align: right;"><strong>₹<?php echo number_format($invoice['sgst_amount'], 2); ?></strong></td>
-                    </tr>
-                    <?php endif; ?>
-                    <?php if ($invoice['igst_amount'] > 0): ?>
-                    <tr>
-                        <td>IGST:</td>
-                        <td style="text-align: right;"><strong>₹<?php echo number_format($invoice['igst_amount'], 2); ?></strong></td>
-                    </tr>
-                    <?php endif; ?>
-                    <tr style="border-top: 1px solid #e5e7eb;">
-                        <td><strong>Total Tax:</strong></td>
-                        <td style="text-align: right;"><strong>₹<?php echo number_format($invoice['total_tax'], 2); ?></strong></td>
-                    </tr>
-                </table>
+        <!-- 4. Footer Split -->
+        <div class="footer-split">
+            <div class="footer-left">
+                <?php if(!empty($company['bank_name'])): ?>
+                <div class="bank-info">
+                    <div style="font-weight:700; margin-bottom:5px;">Bank Details</div>
+                    Bank: <?php echo escape_html($company['bank_name']); ?><br>
+                    A/c No: <?php echo escape_html($company['bank_account_number']); ?><br>
+                    IFSC: <?php echo escape_html($company['bank_ifsc']); ?>
+                </div>
+                <?php endif; ?>
+                
+                <?php if(!empty($company['terms_conditions'])): ?>
+                <div class="terms">
+                    <div class="section-title">Terms & Conditions</div>
+                    <p><?php echo escape_html($company['terms_conditions']); ?></p>
+                </div>
+                <?php endif; ?>
             </div>
             
-            <!-- Totals Box -->
-            <div class="totals-box">
-                <table>
-                    <tr>
-                        <td>Subtotal:</td>
-                        <td style="text-align: right;">₹<?php echo number_format($invoice['subtotal'], 2); ?></td>
-                    </tr>
-                    <?php if ($invoice['discount_amount'] > 0): ?>
-                    <tr>
-                        <td>Discount:</td>
-                        <td style="text-align: right; color: #dc2626;">- ₹<?php echo number_format($invoice['discount_amount'], 2); ?></td>
-                    </tr>
+            <div class="footer-right">
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span><?php echo format_currency($invoice['subtotal']); ?></span>
+                    </div>
+                    <?php if($invoice['discount_amount']>0): ?>
+                    <div class="summary-row">
+                        <span>Discount:</span>
+                        <span style="color:red">-<?php echo format_currency($invoice['discount_amount']); ?></span>
+                    </div>
                     <?php endif; ?>
-                    <tr>
-                        <td>Taxable Amount:</td>
-                        <td style="text-align: right;">₹<?php echo number_format($invoice['taxable_amount'], 2); ?></td>
-                    </tr>
-                    <tr>
-                        <td>GST:</td>
-                        <td style="text-align: right;">₹<?php echo number_format($invoice['total_tax'], 2); ?></td>
-                    </tr>
-                    <?php if ($invoice['round_off'] != 0): ?>
-                    <tr>
-                        <td>Round Off:</td>
-                        <td style="text-align: right;">
-                            <?php echo $invoice['round_off'] > 0 ? '+' : ''; ?>₹<?php echo number_format($invoice['round_off'], 2); ?>
-                        </td>
-                    </tr>
+                    <div class="summary-row">
+                        <span>Total Tax:</span>
+                        <span><?php echo format_currency($invoice['total_tax']); ?></span>
+                    </div>
+                    <?php if($invoice['round_off']!=0): ?>
+                    <div class="summary-row">
+                        <span>Round Off:</span>
+                        <span><?php echo format_currency($invoice['round_off']); ?></span>
+                    </div>
                     <?php endif; ?>
-                    <tr class="grand-total">
-                        <td>Grand Total:</td>
-                        <td style="text-align: right;">₹<?php echo number_format($invoice['total_amount'], 2); ?></td>
-                    </tr>
-                </table>
+                    <div class="summary-row total">
+                        <span>Grand Total:</span>
+                        <span><?php echo format_currency($invoice['total_amount']); ?></span>
+                    </div>
+                    <div class="amount-words">
+                        <?php echo number_to_words($invoice['total_amount']); ?> Rupees Only
+                    </div>
+                </div>
                 
-                <div class="amount-words">
-                    <strong>Amount in Words:</strong><br>
-                    <?php echo number_to_words($invoice['total_amount']); ?> Rupees Only
+                <div class="signature-box">
+                    <p style="margin-bottom:40px; font-size:11px;">For <?php echo escape_html($company['company_name']); ?></p>
+                    <span class="auth-sign">Authorized Signatory</span>
                 </div>
             </div>
         </div>
-        
-        <!-- Bank Details -->
-        <?php if (!empty($company['bank_name'])): ?>
-        <div class="bank-details">
-            <h4>Bank Details</h4>
-            <table>
-                <tr>
-                    <td><strong>Bank:</strong></td>
-                    <td><?php echo escape_html($company['bank_name']); ?></td>
-                    <td><strong>Account No:</strong></td>
-                    <td><?php echo escape_html($company['bank_account_number']); ?></td>
-                </tr>
-                <tr>
-                    <td><strong>IFSC:</strong></td>
-                    <td><?php echo escape_html($company['bank_ifsc']); ?></td>
-                    <td><strong>Branch:</strong></td>
-                    <td><?php echo escape_html($company['bank_branch']); ?></td>
-                </tr>
-            </table>
-        </div>
-        <?php endif; ?>
-        
-        <!-- Terms & Conditions -->
-        <?php if (!empty($company['terms_conditions'])): ?>
-        <div class="terms">
-            <h4>Terms & Conditions</h4>
-            <p><?php echo escape_html($company['terms_conditions']); ?></p>
-        </div>
-        <?php endif; ?>
-        
-        <!-- Signature -->
-        <div class="signature">
-            <p><strong>For <?php echo escape_html($company['company_name']); ?></strong></p>
-            <div style="height: 50px;"></div>
-            <div class="signature-line">Authorized Signatory</div>
-        </div>
     </div>
-    
-    <script>
-        // Auto-trigger print dialog if requested
-        <?php if (isset($_GET['print']) && $_GET['print'] == '1'): ?>
-        window.onload = function() {
-            window.print();
-        };
-        <?php endif; ?>
-    </script>
 </body>
 </html>

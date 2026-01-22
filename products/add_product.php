@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reorder_level = sanitize_sql($connection, $_POST['reorder_level']);
     $unit_of_measure = sanitize_sql($connection, $_POST['unit_of_measure']);
     $status = sanitize_sql($connection, $_POST['status']);
+    $tracking_type = sanitize_sql($connection, $_POST['tracking_type']);
     
     // Initialize error flag
     $has_error = false;
@@ -83,11 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $insert_query = "INSERT INTO products 
                         (product_code, product_name, description, category_id, supplier_id, 
-                         unit_price, quantity_in_stock, reorder_level, unit_of_measure, status) 
+                         unit_price, quantity_in_stock, reorder_level, unit_of_measure, status, tracking_type) 
                         VALUES 
                         ('{$product_code}', '{$product_name}', '{$description}', '{$category_id}', 
                          {$supplier_value}, '{$unit_price}', '{$quantity_in_stock}', 
-                         '{$reorder_level}', '{$unit_of_measure}', '{$status}')";
+                         '{$reorder_level}', '{$unit_of_measure}', '{$status}', '{$tracking_type}')";
         
         if (db_execute($connection, $insert_query)) {
             set_success_message("Product '{$product_name}' has been successfully added.");
@@ -252,7 +253,7 @@ $suppliers_result = db_query($connection, $suppliers_query);
             
             <!-- Unit of Measure and Status -->
             <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="unit_of_measure" class="form-label">Unit of Measure *</label>
                     <select id="unit_of_measure" name="unit_of_measure" class="form-control" required>
                         <option value="pcs" <?php echo (isset($_POST['unit_of_measure']) && $_POST['unit_of_measure'] === 'pcs') ? 'selected' : 'selected'; ?>>Pieces (pcs)</option>
@@ -264,12 +265,21 @@ $suppliers_result = db_query($connection, $suppliers_query);
                     </select>
                 </div>
                 
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="status" class="form-label">Status *</label>
                     <select id="status" name="status" class="form-control" required>
                         <option value="active" <?php echo (isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>
                         <option value="inactive" <?php echo (isset($_POST['status']) && $_POST['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
                         <option value="discontinued" <?php echo (isset($_POST['status']) && $_POST['status'] === 'discontinued') ? 'selected' : ''; ?>>Discontinued</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label for="tracking_type" class="form-label">Tracking Type *</label>
+                    <select id="tracking_type" name="tracking_type" class="form-control" required>
+                        <option value="none" <?php echo (isset($_POST['tracking_type']) && $_POST['tracking_type'] === 'none') ? 'selected' : 'selected'; ?>>None (Standard)</option>
+                        <option value="batch" <?php echo (isset($_POST['tracking_type']) && $_POST['tracking_type'] === 'batch') ? 'selected' : ''; ?>>Batch Number & Expiry</option>
+                        <option value="serial" <?php echo (isset($_POST['tracking_type']) && $_POST['tracking_type'] === 'serial') ? 'selected' : ''; ?>>Serial No. / IMEI</option>
                     </select>
                 </div>
             </div>

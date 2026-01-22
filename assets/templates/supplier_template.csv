@@ -1,0 +1,3 @@
+supplier_name,contact_person,email,phone,address,city,country,status
+"Tech Vendor Ltd",John Doe,john@techvendor.com,9876543210,"123 Tech Park",Mumbai,India,active
+"Office Mart",Jane Smith,jane@officemart.com,9876543211,"456 Station Road",Delhi,India,active
