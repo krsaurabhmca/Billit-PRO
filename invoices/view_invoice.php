@@ -61,6 +61,26 @@ $company = db_fetch_one($connection, $company_query);
 
 // Theme Configuration
 $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '#2563eb';
+
+// CHECK RETURNS
+$has_returns = false;
+$returned_total = 0;
+$return_status_badge = "";
+$returns_res = db_query($connection, "SELECT * FROM sale_returns WHERE invoice_id = '$invoice_id'");
+if (mysqli_num_rows($returns_res) > 0) {
+    $has_returns = true;
+    while($r = mysqli_fetch_assoc($returns_res)) {
+        $returned_total += $r['total_amount'];
+    }
+    // Reset Data Seek
+    mysqli_data_seek($returns_res, 0);
+    
+    if ($returned_total >= $invoice['total_amount']) {
+        $return_status_badge = '<span class="badge badge-danger" style="padding: 10px; margin-right: 10px;">↩️ FULLY RETURNED</span>';
+    } else {
+        $return_status_badge = '<span class="badge badge-warning" style="padding: 10px; margin-right: 10px;">↩️ PARTIALLY RETURNED</span>';
+    }
+}
 ?>
 
 <!-- ================================================================ -->
@@ -102,6 +122,21 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
         </a>
     </div>
 </div>
+
+<?php if ($has_returns): ?>
+<div class="alert alert-warning" style="border-left: 5px solid #d97706; background-color: #fffbeb; color: #92400e;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>⚠️ Product Returns Found</strong><br>
+            Total Refunded Amount: <strong><?php echo format_currency($returned_total); ?></strong>
+        </div>
+        <div>
+            <?php echo $return_status_badge; ?>
+            <a href="#returns-section" class="btn btn-sm btn-outline-secondary" style="background:white;">View Details</a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- ================================================================ -->
 <!-- INVOICE DISPLAY -->
@@ -373,5 +408,29 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
     }
 }
 </style>
+
+<?php if ($has_returns): ?>
+<div class="card" id="returns-section" style="margin-top:30px; border-top:3px solid #dc2626;">
+    <div class="card-header">
+        <h3 class="card-title">↩️ Return History</h3>
+    </div>
+    <div class="card-body">
+        <table class="table">
+             <thead><tr><th>Return #</th><th>Date</th><th>Reason</th><th class="text-right">Amount</th><th>Action</th></tr></thead>
+             <tbody>
+                 <?php while($ret = mysqli_fetch_assoc($returns_res)): ?>
+                 <tr>
+                     <td><?php echo $ret['return_number']; ?></td>
+                     <td><?php echo format_date($ret['return_date']); ?></td>
+                     <td><?php echo escape_html($ret['reason']); ?></td>
+                     <td class="text-right">-<?php echo format_currency($ret['total_amount']); ?></td>
+                     <td><a href="view_return.php?id=<?php echo $ret['return_id']; ?>" class="btn btn-sm btn-light">View</a></td>
+                 </tr>
+                 <?php endwhile; ?>
+             </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -408,6 +408,44 @@ $company_state = $company ? ($company['company_state_code'] ?? '27') : '27';
             </div>
         </div>
     </div>
+
+<style>
+/* Enforce Table Styles */
+#productsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+#productsTable th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid #e2e8f0;
+}
+#productsTable td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+#productsTable tr:last-child td {
+    border-bottom: none;
+}
+.btn-delete {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-delete:hover {
+    background: #fecaca;
+}
+</style>
     
     <!-- Invoice Summary -->
     <div class="card">
@@ -661,36 +699,37 @@ function removeProduct(index) {
 // Update products table
 function updateProductsTable() {
     const tbody = document.getElementById('productsTableBody');
-    const emptyRow = document.getElementById('emptyRow');
+    
+    // Clear current content
+    tbody.innerHTML = '';
     
     if (products.length === 0) {
-        emptyRow.style.display = 'table-row';
+        tbody.innerHTML = '<tr id="emptyRow"><td colspan="7" class="text-center" style="padding:20px; color:#999;">No products added yet</td></tr>';
         return;
     }
     
-    emptyRow.style.display = 'none';
-    
-    let html = '';
     products.forEach((product, index) => {
         const amount = product.quantity * product.unit_price;
-        const trackingDisplay = product.tracking_info ? `<br><small class="text-primary">${product.tracking_info}</small>` : '';
+        const trackingDisplay = product.tracking_info ? `<br><small class="text-primary" style="font-size:0.85em;">📦 ${product.tracking_info}</small>` : '';
         
-        html += `
-            <tr>
-                <td><strong>${product.product_name}</strong><br><small>${product.product_code}</small>${trackingDisplay}</td>
-                <td>${product.hsn_code}</td>
-                <td>${product.quantity} ${product.unit_of_measure}</td>
-                <td>₹${product.unit_price.toFixed(2)}</td>
-                <td>₹${amount.toFixed(2)}</td>
-                <td>${product.gst_rate}%</td>
-                <td>
-                    <button type="button" class="btn-action btn-delete" onclick="removeProduct(${index})">🗑️</button>
-                </td>
-            </tr>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <div style="font-weight:600; color:#333;">${product.product_name}</div>
+                <div style="font-size:0.85em; color:#666;">${product.product_code}</div>
+                ${trackingDisplay}
+            </td>
+            <td>${product.hsn_code || '-'}</td>
+            <td>${product.quantity} ${product.unit_of_measure}</td>
+            <td>₹${product.unit_price.toFixed(2)}</td>
+            <td style="font-weight:600;">₹${amount.toFixed(2)}</td>
+            <td>${product.gst_rate}%</td>
+            <td>
+                <button type="button" class="btn-action btn-delete" onclick="removeProduct(${index})" title="Remove Item">🗑️</button>
+            </td>
         `;
+        tbody.appendChild(tr);
     });
-    
-    tbody.innerHTML = html + emptyRow.outerHTML;
 }
 
 // Calculate totals

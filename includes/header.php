@@ -149,15 +149,15 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Sales</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>invoices/create_invoice.php" class="sidebar-link">
-                        <span class="sidebar-icon">➕</span>
-                        <span class="sidebar-text">Create Invoice</span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
                     <a href="<?php echo BASE_URL; ?>invoices/invoices.php" class="sidebar-link">
                         <span class="sidebar-icon">🧾</span>
                         <span class="sidebar-text">All Invoices</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>invoices/create_invoice.php" class="sidebar-link">
+                        <span class="sidebar-icon">➕</span>
+                        <span class="sidebar-text">Create Invoice</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -166,15 +166,15 @@ $menu_layout = MENU_LAYOUT;
                         <span class="sidebar-text">Customers</span>
                     </a>
                 </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>invoices/sales_returns_list.php" class="sidebar-link">
+                        <span class="sidebar-icon">↩️</span>
+                        <span class="sidebar-text">Sales Return</span>
+                    </a>
+                </li>
 
                 <li class="sidebar-heading">Purchase</li>
                 
-                <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>purchases/create_purchase.php" class="sidebar-link">
-                        <span class="sidebar-icon">📥</span>
-                        <span class="sidebar-text">Record Purchase</span>
-                    </a>
-                </li>
                 <li class="sidebar-item">
                     <a href="<?php echo BASE_URL; ?>purchases/index.php" class="sidebar-link">
                         <span class="sidebar-icon">📋</span>
@@ -182,9 +182,21 @@ $menu_layout = MENU_LAYOUT;
                     </a>
                 </li>
                 <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>purchases/create_purchase.php" class="sidebar-link">
+                        <span class="sidebar-icon">📥</span>
+                        <span class="sidebar-text">Record Purchase</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
                     <a href="<?php echo BASE_URL; ?>suppliers/suppliers.php" class="sidebar-link">
                         <span class="sidebar-icon">🏢</span>
                         <span class="sidebar-text">Suppliers</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>purchases/purchase_returns_list.php" class="sidebar-link">
+                        <span class="sidebar-icon">📤</span>
+                        <span class="sidebar-text">Purchase Return</span>
                     </a>
                 </li>
                 
@@ -217,6 +229,18 @@ $menu_layout = MENU_LAYOUT;
                         <span class="sidebar-text">Analytics Hub</span>
                     </a>
                 </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>reports/batch_report.php" class="sidebar-link">
+                        <span class="sidebar-icon">💊</span>
+                        <span class="sidebar-text">Batch Report</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>reports/tally_report.php" class="sidebar-link">
+                        <span class="sidebar-icon">🔢</span>
+                        <span class="sidebar-text">Product Tally</span>
+                    </a>
+                </li>
                 
                 <?php if (has_role('admin')): ?>
                 <li class="sidebar-heading">Admin</li>
@@ -243,6 +267,12 @@ $menu_layout = MENU_LAYOUT;
                     <a href="<?php echo BASE_URL; ?>reports/access_log.php" class="sidebar-link">
                         <span class="sidebar-icon">🛡️</span>
                         <span class="sidebar-text">Access Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="<?php echo BASE_URL; ?>backup/backup.php" class="sidebar-link">
+                        <span class="sidebar-icon">💾</span>
+                        <span class="sidebar-text">Backup & Restore</span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -334,6 +364,7 @@ $menu_layout = MENU_LAYOUT;
                             <li><a href="<?php echo BASE_URL; ?>invoices/create_invoice.php">➕ Create Invoice</a></li>
                             <li><a href="<?php echo BASE_URL; ?>invoices/invoices.php">📋 All Invoices</a></li>
                             <li><a href="<?php echo BASE_URL; ?>customers/customers.php">👥 Customers</a></li>
+                            <li><a href="<?php echo BASE_URL; ?>invoices/sales_returns_list.php">↩️ Sales Return</a></li>
                         </ul>
                     </li>
 
@@ -348,6 +379,7 @@ $menu_layout = MENU_LAYOUT;
                             <li><a href="<?php echo BASE_URL; ?>purchases/create_purchase.php">➕ Record Purchase</a></li>
                             <li><a href="<?php echo BASE_URL; ?>purchases/index.php">📋 Purchase List</a></li>
                             <li><a href="<?php echo BASE_URL; ?>suppliers/suppliers.php">🏢 Suppliers</a></li>
+                            <li><a href="<?php echo BASE_URL; ?>purchases/purchase_returns_list.php">📤 Purchase Return</a></li>
                         </ul>
                     </li>
 
@@ -386,7 +418,9 @@ $menu_layout = MENU_LAYOUT;
                             <li><a href="<?php echo BASE_URL; ?>users/users.php">👤 Users</a></li>
                             <li><a href="<?php echo BASE_URL; ?>settings/company_settings.php">🏢 Settings</a></li>
                             <li><a href="<?php echo BASE_URL; ?>settings/smtp_settings.php">📧 SMTP</a></li>
+                            <li><a href="<?php echo BASE_URL; ?>settings/smtp_settings.php">📧 SMTP</a></li>
                             <li><a href="<?php echo BASE_URL; ?>reports/access_log.php">🛡️ Logs</a></li>
+                            <li><a href="<?php echo BASE_URL; ?>backup/backup.php">💾 Backup</a></li>
                         </ul>
                     </li>
                     <?php endif; ?>
