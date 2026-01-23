@@ -17,6 +17,18 @@ require_once __DIR__ . '/../includes/functions.php';
 // Ensure user is logged in
 require_login();
 
+// Include Wizard Functions
+require_once __DIR__ . '/../includes/functions_wizard.php';
+
+// Check if setup is complete (unless we are already in the wizard)
+if (strpos($_SERVER['PHP_SELF'], '/wizard/setup_wizard.php') === false && has_role('admin')) {
+    $setup_status = check_setup_status($connection);
+    if (!$setup_status['is_complete']) {
+        header("Location: " . BASE_URL . "wizard/setup_wizard.php");
+        exit();
+    }
+}
+
 // Get current user information
 $current_user = $_SESSION['username'];
 $current_role = $_SESSION['role'];
@@ -140,7 +152,7 @@ $menu_layout = MENU_LAYOUT;
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="<?php echo BASE_URL; ?>index.php" 
-                       class="sidebar-link <?php echo is_current_page('index.php') ? 'active' : ''; ?>">
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'index.php'); ?>">
                         <span class="sidebar-icon">🏠</span>
                         <span class="sidebar-text">Dashboard</span>
                     </a>
@@ -149,25 +161,29 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Sales</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>invoices/invoices.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>invoices/invoices.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'invoices/invoices.php'); ?>">
                         <span class="sidebar-icon">🧾</span>
                         <span class="sidebar-text">All Invoices</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>invoices/create_invoice.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>invoices/create_invoice.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'invoices/create_invoice.php'); ?>">
                         <span class="sidebar-icon">➕</span>
                         <span class="sidebar-text">Create Invoice</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>customers/customers.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>customers/customers.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'customers/customers.php'); ?>">
                         <span class="sidebar-icon">👥</span>
                         <span class="sidebar-text">Customers</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>invoices/sales_returns_list.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>invoices/sales_returns_list.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'invoices/sales_returns_list.php'); ?>">
                         <span class="sidebar-icon">↩️</span>
                         <span class="sidebar-text">Sales Return</span>
                     </a>
@@ -176,25 +192,29 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Purchase</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>purchases/index.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>purchases/index.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'purchases/index.php'); ?>">
                         <span class="sidebar-icon">📋</span>
                         <span class="sidebar-text">Manage Purchases</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>purchases/create_purchase.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>purchases/create_purchase.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'purchases/create_purchase.php'); ?>">
                         <span class="sidebar-icon">📥</span>
                         <span class="sidebar-text">Record Purchase</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>suppliers/suppliers.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>suppliers/suppliers.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'suppliers/suppliers.php'); ?>">
                         <span class="sidebar-icon">🏢</span>
                         <span class="sidebar-text">Suppliers</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>purchases/purchase_returns_list.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>purchases/purchase_returns_list.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'purchases/purchase_returns_list.php'); ?>">
                         <span class="sidebar-icon">📤</span>
                         <span class="sidebar-text">Purchase Return</span>
                     </a>
@@ -203,19 +223,22 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Inventory</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>products/products.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>products/products.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'products/products.php'); ?>">
                         <span class="sidebar-icon">📦</span>
                         <span class="sidebar-text">Products</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>categories/categories.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>categories/categories.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'categories/categories.php'); ?>">
                         <span class="sidebar-icon">🏷️</span>
                         <span class="sidebar-text">Categories</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>imports/bulk_import.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>imports/bulk_import.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'imports/bulk_import.php'); ?>">
                         <span class="sidebar-icon">📤</span>
                         <span class="sidebar-text">Bulk Import</span>
                     </a>
@@ -224,19 +247,22 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Reports</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>reports/index.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>reports/index.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'reports/index.php'); ?>">
                         <span class="sidebar-icon">📊</span>
                         <span class="sidebar-text">Analytics Hub</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>reports/batch_report.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>reports/batch_report.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'reports/batch_report.php'); ?>">
                         <span class="sidebar-icon">💊</span>
                         <span class="sidebar-text">Batch Report</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>reports/tally_report.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>reports/tally_report.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'reports/tally_report.php'); ?>">
                         <span class="sidebar-icon">🔢</span>
                         <span class="sidebar-text">Product Tally</span>
                     </a>
@@ -246,25 +272,29 @@ $menu_layout = MENU_LAYOUT;
                 <li class="sidebar-heading">Admin</li>
                 
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>users/users.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>users/users.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'users/users.php'); ?>">
                         <span class="sidebar-icon">👤</span>
                         <span class="sidebar-text">Users</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>settings/company_settings.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>settings/company_settings.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'settings/company_settings.php'); ?>">
                         <span class="sidebar-icon">⚙️</span>
                         <span class="sidebar-text">Settings</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>settings/smtp_settings.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>settings/smtp_settings.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'settings/smtp_settings.php'); ?>">
                         <span class="sidebar-icon">📧</span>
                         <span class="sidebar-text">SMTP Settings</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="<?php echo BASE_URL; ?>reports/access_log.php" class="sidebar-link">
+                    <a href="<?php echo BASE_URL; ?>reports/access_log.php" 
+                       class="sidebar-link <?php echo is_active_menu(BASE_URL . 'reports/access_log.php'); ?>">
                         <span class="sidebar-icon">🛡️</span>
                         <span class="sidebar-text">Access Logs</span>
                     </a>
@@ -437,6 +467,9 @@ $menu_layout = MENU_LAYOUT;
             
             <!-- User Menu -->
             <div class="header-user">
+                <button onclick="switchLayout('sidebar')" class="header-icon-btn" title="Switch to Sidebar Menu" style="cursor: pointer; color: inherit; border: 1px solid #e2e8f0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                </button>
                 <a href="<?php echo BASE_URL; ?>help.php" class="header-icon-btn" title="Help / Documentation">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                 </a>

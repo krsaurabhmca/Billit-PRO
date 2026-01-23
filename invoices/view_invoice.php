@@ -111,9 +111,14 @@ if (mysqli_num_rows($returns_res) > 0) {
             <?php endif; ?>
         <?php endif; ?>
         
-        <a href="print_invoice.php?id=<?php echo $invoice_id; ?>" class="btn btn-primary" title="Open printable invoice (save as PDF)">
+        <a href="print_invoice.php?id=<?php echo $invoice_id; ?>" class="btn btn-primary" target="_blank" title="Open printable invoice (save as PDF)">
             <span class="btn-icon">📄</span>
-            PDF / Print
+            PDF
+        </a>
+        
+        <a href="print_pos.php?id=<?php echo $invoice_id; ?>" class="btn btn-primary" style="background-color: #334155; border-color: #334155;" target="_blank" title="Thermal Receipt Print">
+            <span class="btn-icon">🖨️</span>
+            POS Print
         </a>
         
         <a href="invoices.php" class="btn btn-secondary">
@@ -163,7 +168,9 @@ if (mysqli_num_rows($returns_res) > 0) {
                         <?php echo escape_html($company['company_city']); ?>, 
                         <?php echo escape_html($company['company_state']); ?> - 
                         <?php echo escape_html($company['company_pincode']); ?><br>
-                        <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
+                        <?php if(!empty($company['company_gstin'])): ?>
+                            <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
+                        <?php endif; ?>
                         <strong>Phone:</strong> <?php echo escape_html($company['company_phone']); ?><br>
                         <strong>Email:</strong> <?php echo escape_html($company['company_email']); ?>
                     </p>
@@ -377,6 +384,32 @@ if (mysqli_num_rows($returns_res) > 0) {
                     </span>
                  </div>
                  
+                 <!-- Payment History Mini Table -->
+                 <?php 
+                 $pay_res = db_query($connection, "SELECT * FROM payments WHERE invoice_id='$invoice_id' ORDER BY payment_date DESC");
+                 if(mysqli_num_rows($pay_res) > 0): 
+                 ?>
+                 <div style="margin-top: 15px; text-align: left; font-size: 12px; border: 1px solid #eee; padding: 10px; background: #f8fafc;">
+                     <strong>Payment History</strong>
+                     <table style="width: 100%; margin-top: 5px;">
+                         <?php while($p = mysqli_fetch_assoc($pay_res)): ?>
+                         <tr>
+                             <td><?php echo date('d/m', strtotime($p['payment_date'])); ?></td>
+                             <td style="text-align: right;"><?php echo format_currency($p['payment_amount']); ?></td>
+                         </tr>
+                         <?php endwhile; ?>
+                         <tr style="border-top:1px solid #ccc;">
+                            <td><strong>Total Paid</strong></td>
+                            <td style="text-align: right;"><strong><?php echo format_currency($invoice['amount_paid']); ?></strong></td>
+                         </tr>
+                         <tr>
+                            <td style="color: <?php echo $invoice['amount_due'] > 0 ? 'red' : 'green'; ?>"><strong>Due</strong></td>
+                            <td style="text-align: right; color: <?php echo $invoice['amount_due'] > 0 ? 'red' : 'green'; ?>"><strong><?php echo format_currency($invoice['amount_due']); ?></strong></td>
+                         </tr>
+                     </table>
+                 </div>
+                 <?php endif; ?>
+
                  <div style="border: 1px solid #eee; padding: 15px; margin-top: 20px;">
                      <p style="margin: 0; font-size:14px; font-weight:600;">Authorized Signatory</p>
                     <div style="height: 50px;"></div>

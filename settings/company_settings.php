@@ -240,11 +240,11 @@ $indian_states = get_indian_states();
         <div class="card-body">
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="company_gstin" class="form-label">GSTIN (15 characters) *</label>
+                    <label for="company_gstin" class="form-label">GSTIN (15 characters)</label>
                     <input type="text" id="company_gstin" name="company_gstin" class="form-control" 
                            maxlength="15" placeholder="e.g., 27AAAAA0000A1Z5"
-                           value="<?php echo $settings ? escape_html($settings['company_gstin']) : ''; ?>" required>
-                    <small class="form-text">Format: 2-digit state code + 10-char PAN + 3 chars</small>
+                           value="<?php echo $settings ? escape_html($settings['company_gstin']) : ''; ?>">
+                    <small class="form-text">Format: 2-digit state code + 10-char PAN + 3 chars (Leave empty if not registered)</small>
                 </div>
                 
                 <div class="form-group col-md-6">

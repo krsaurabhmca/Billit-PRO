@@ -2,7 +2,7 @@
 
 **Billit Pro** is a modern, feature-rich web application designed for comprehensive inventory management and professional invoicing. Built with PHP and MySQL, it offers enterprise-grade features like Batch (Expiry) and Serial (IMEI) tracking, making it perfect for electronics shops, pharmacies, and retail businesses.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![PHP](https://img.shields.io/badge/php-8.0%2B-777BB4.svg)
+![Version](https://img.shields.io/badge/version-6.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![PHP](https://img.shields.io/badge/php-8.0%2B-777BB4.svg)
 
 ---
 

@@ -67,8 +67,8 @@ $purchases = db_fetch_all($connection, $query);
                         </td>
                         <td><small><?php echo escape_html($p['full_name']); ?></small></td>
                         <td>
-                            <!-- View Detail Functionality to be added -->
-                            <button class="btn btn-sm btn-secondary">View</button>
+                            <!-- View Detail Functionality -->
+                            <a href="view_purchase.php?id=<?php echo $p['purchase_id']; ?>" class="btn btn-sm btn-secondary">View</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -814,4 +814,28 @@ function send_email($connection, $to, $subject, $body) {
         }
     }
 }
+/**
+ * Check if the provided URL matches the current page path for menu highlighting.
+ * 
+ * @param string $url The full URL or relative path to check
+ * @return string Returns 'active' if match, string empty otherwise
+ */
+function is_active_menu($url) {
+    if (empty($url)) return '';
+    
+    // Normalize paths
+    $current_path = $_SERVER['PHP_SELF'];
+    $url_path = parse_url($url, PHP_URL_PATH);
+    
+    // If URL contains BASE_URL, strip it to comparison
+    // But simplest is to check if current_path ends with the url_path's filename or strictly matches
+    
+    // Exact match check
+    if ($current_path === $url_path) return 'active';
+    
+    // Strict matching only for now to avoid multiple highlights in same directory
+    // future enhancement: passed "related_pages" array
+    
+    return '';
+}
 ?>

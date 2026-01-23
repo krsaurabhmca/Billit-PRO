@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_id = sanitize_sql($connection, $_POST['category_id']);
     $supplier_id = !empty($_POST['supplier_id']) ? sanitize_sql($connection, $_POST['supplier_id']) : 'NULL';
     $unit_price = sanitize_sql($connection, $_POST['unit_price']);
+    $gst_rate = sanitize_sql($connection, $_POST['gst_rate']);
+    $hsn_code = sanitize_sql($connection, $_POST['hsn_code']);
     $quantity_in_stock = sanitize_sql($connection, $_POST['quantity_in_stock']);
     $reorder_level = sanitize_sql($connection, $_POST['reorder_level']);
     $unit_of_measure = sanitize_sql($connection, $_POST['unit_of_measure']);
@@ -57,6 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $has_error = true;
     }
     
+    if (!validate_numeric($gst_rate) || $gst_rate < 0) {
+        set_error_message("Valid GST Rate is required.");
+        $has_error = true;
+    }
+    
     if (!validate_numeric($quantity_in_stock) || $quantity_in_stock < 0) {
         set_error_message("Valid quantity is required.");
         $has_error = true;
@@ -84,10 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $insert_query = "INSERT INTO products 
                         (product_code, product_name, description, category_id, supplier_id, 
-                         unit_price, quantity_in_stock, reorder_level, unit_of_measure, status, tracking_type) 
+                         unit_price, gst_rate, hsn_code, quantity_in_stock, reorder_level, unit_of_measure, status, tracking_type) 
                         VALUES 
                         ('{$product_code}', '{$product_name}', '{$description}', '{$category_id}', 
-                         {$supplier_value}, '{$unit_price}', '{$quantity_in_stock}', 
+                         {$supplier_value}, '{$unit_price}', '{$gst_rate}', '{$hsn_code}', '{$quantity_in_stock}', 
                          '{$reorder_level}', '{$unit_of_measure}', '{$status}', '{$tracking_type}')";
         
         if (db_execute($connection, $insert_query)) {
@@ -207,7 +214,7 @@ $suppliers_result = db_query($connection, $suppliers_query);
             
             <!-- Price and Stock -->
             <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label for="unit_price" class="form-label">Unit Price (₹) *</label>
                     <input 
                         type="number" 
@@ -222,8 +229,31 @@ $suppliers_result = db_query($connection, $suppliers_query);
                     >
                 </div>
                 
-                <div class="form-group col-md-4">
-                    <label for="quantity_in_stock" class="form-label">Initial Stock Quantity *</label>
+                <div class="form-group col-md-3">
+                    <label for="gst_rate" class="form-label">GST Rate (%)</label>
+                    <select id="gst_rate" name="gst_rate" class="form-control">
+                        <option value="0" <?php echo (isset($_POST['gst_rate']) && $_POST['gst_rate'] == '0') ? 'selected' : ''; ?>>0% (Exempt)</option>
+                        <option value="5" <?php echo (isset($_POST['gst_rate']) && $_POST['gst_rate'] == '5') ? 'selected' : ''; ?>>5%</option>
+                        <option value="12" <?php echo (isset($_POST['gst_rate']) && $_POST['gst_rate'] == '12') ? 'selected' : ''; ?>>12%</option>
+                        <option value="18" <?php echo (isset($_POST['gst_rate']) && $_POST['gst_rate'] == '18') ? 'selected' : 'selected'; ?>>18% (Standard)</option>
+                        <option value="28" <?php echo (isset($_POST['gst_rate']) && $_POST['gst_rate'] == '28') ? 'selected' : ''; ?>>28%</option>
+                    </select>
+                </div>
+                
+                 <div class="form-group col-md-2">
+                    <label for="hsn_code" class="form-label">HSN Code</label>
+                    <input 
+                        type="text" 
+                        id="hsn_code" 
+                        name="hsn_code" 
+                        class="form-control" 
+                        placeholder="HSN/SAC"
+                        value="<?php echo isset($_POST['hsn_code']) ? escape_html($_POST['hsn_code']) : ''; ?>"
+                    >
+                </div>
+
+                <div class="form-group col-md-2">
+                    <label for="quantity_in_stock" class="form-label">Initial Stock *</label>
                     <input 
                         type="number" 
                         id="quantity_in_stock" 
@@ -236,8 +266,8 @@ $suppliers_result = db_query($connection, $suppliers_query);
                     >
                 </div>
                 
-                <div class="form-group col-md-4">
-                    <label for="reorder_level" class="form-label">Reorder Level *</label>
+                <div class="form-group col-md-2">
+                    <label for="reorder_level" class="form-label">Reorder Lvl</label>
                     <input 
                         type="number" 
                         id="reorder_level" 

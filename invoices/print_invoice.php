@@ -37,7 +37,19 @@ $items_query = "SELECT ii.*, pb.batch_no, pb.expiry_date
                 WHERE ii.invoice_id = '{$invoice_id}' ORDER BY ii.item_id";
 $items_result = db_query($connection, $items_query);
 
-// 4. FETCH COMPANY SETTINGS
+// 4. FETCH PAYMENTS
+$payments_query = "SELECT * FROM payments WHERE invoice_id = '{$invoice_id}' ORDER BY payment_date DESC";
+$payments_result = db_query($connection, $payments_query);
+$total_paid_record = 0;
+// We can't iterate here if we want to loop later, so either store array or reset pointer later
+// Let's store in array
+$payment_records = [];
+while($pay = mysqli_fetch_assoc($payments_result)){
+    $total_paid_record += $pay['payment_amount'];
+    $payment_records[] = $pay;
+}
+
+// 5. FETCH COMPANY SETTINGS
 $company_query = "SELECT * FROM company_settings LIMIT 1";
 $company = db_fetch_one($connection, $company_query);
 
@@ -138,7 +150,9 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
                     <div class="company-meta">
                         <?php echo nl2br(escape_html($company['company_address'])); ?><br>
                         <?php echo escape_html($company['company_city']); ?>, <?php echo escape_html($company['company_state']); ?><br>
-                        <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
+                        <?php if(!empty($company['company_gstin'])): ?>
+                            <strong>GSTIN:</strong> <?php echo escape_html($company['company_gstin']); ?><br>
+                        <?php endif; ?>
                         Phone: <?php echo escape_html($company['company_phone']); ?>
                     </div>
                 </div>
@@ -274,10 +288,43 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
                         <span>Grand Total:</span>
                         <span><?php echo format_currency($invoice['total_amount']); ?></span>
                     </div>
+                    
+                    <!-- Payment Summary -->
+                    <div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                         <div class="summary-row">
+                            <span>Paid Amount:</span>
+                            <span><?php echo format_currency($invoice['amount_paid']); ?></span>
+                        </div>
+                        <div class="summary-row" style="color: <?php echo $invoice['amount_due'] > 0 ? '#dc2626' : '#16a34a'; ?>; font-weight: bold;">
+                            <span>Balance Due:</span>
+                            <span><?php echo format_currency($invoice['amount_due']); ?></span>
+                        </div>
+                    </div>
+
                     <div class="amount-words">
                         <?php echo number_to_words($invoice['total_amount']); ?> Rupees Only
                     </div>
                 </div>
+                
+                <?php if(!empty($payment_records)): ?>
+                <div style="margin-top: 20px; font-size: 11px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Payment History</div>
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #eee;">
+                        <tr style="background: #f8fafc;">
+                            <th style="text-align: left; padding: 4px; border: 1px solid #eee;">Date</th>
+                            <th style="text-align: left; padding: 4px; border: 1px solid #eee;">Mode</th>
+                            <th style="text-align: right; padding: 4px; border: 1px solid #eee;">Amount</th>
+                        </tr>
+                        <?php foreach($payment_records as $pay): ?>
+                        <tr>
+                            <td style="padding: 4px; border: 1px solid #eee;"><?php echo date('d/m/Y', strtotime($pay['payment_date'])); ?></td>
+                            <td style="padding: 4px; border: 1px solid #eee;"><?php echo ucfirst($pay['payment_method']); ?></td>
+                            <td style="text-align: right; padding: 4px; border: 1px solid #eee;"><?php echo format_currency($pay['payment_amount']); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+                <?php endif; ?>
                 
                 <div class="signature-box">
                     <p style="margin-bottom:40px; font-size:11px;">For <?php echo escape_html($company['company_name']); ?></p>
@@ -286,5 +333,13 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
             </div>
         </div>
     </div>
+    </div>
+    <script>
+        // Check if opened from ViewInvoice with print intent
+        window.onload = function() {
+            // Optional: Auto print
+            // window.print();
+        }
+    </script>
 </body>
 </html>

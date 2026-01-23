@@ -24,7 +24,7 @@ define('DB_NAME', 'inventory_management'); // Database name
 // ============================================================================
 
 // Application name
-define('APP_NAME', 'Billit');
+define('APP_NAME', 'Billit 6.0');
 
 // Developer Information
 define('DEV_NAME', 'OfferPlant Technologies');
@@ -32,7 +32,7 @@ define('DEV_URL', 'https://offerplant.com');
 define('DEV_EMAIL', 'ask@offerplant.com');
 
 // Application version
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '6.0');
 
 // Menu Layout: 'top' or 'sidebar'
 define('MENU_LAYOUT', isset($_COOKIE['menu_layout']) ? $_COOKIE['menu_layout'] : 'sidebar');

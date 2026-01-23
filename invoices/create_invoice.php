@@ -80,19 +80,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $taxable_amount = $subtotal - $discount_amount;
             
             // Calculate GST for each product and sum up
-            foreach ($products as $product) {
-                $item_taxable = ($product['quantity'] * $product['unit_price']) * ($taxable_amount / $subtotal);
-                
-                $gst_calc = calculate_gst(
-                    $item_taxable, 
-                    $product['gst_rate'], 
-                    $company['company_state_code'] ?? '27', 
-                    $customer['billing_state_code'] ?? '27'
-                );
-                
-                $total_cgst += $gst_calc['cgst_amount'];
-                $total_sgst += $gst_calc['sgst_amount'];
-                $total_igst += $gst_calc['igst_amount'];
+            if (!empty($company['company_gstin'])) {
+                foreach ($products as $product) {
+                    $item_taxable = ($product['quantity'] * $product['unit_price']) * ($taxable_amount / $subtotal);
+                    
+                    $gst_calc = calculate_gst(
+                        $item_taxable, 
+                        $product['gst_rate'], 
+                        $company['company_state_code'] ?? '27', 
+                        $customer['billing_state_code'] ?? '27'
+                    );
+                    
+                    $total_cgst += $gst_calc['cgst_amount'];
+                    $total_sgst += $gst_calc['sgst_amount'];
+                    $total_igst += $gst_calc['igst_amount'];
+                }
             }
             
             $total_tax = $total_cgst + $total_sgst + $total_igst;
@@ -138,6 +140,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $customer['billing_state_code'] ?? '27'
                     );
                     
+                    // If no company GSTIN, force tax to zero
+                    if (empty($company['company_gstin'])) {
+                        $gst_calc['cgst_amount'] = 0;
+                        $gst_calc['sgst_amount'] = 0;
+                        $gst_calc['igst_amount'] = 0;
+                        $gst_calc['total_tax'] = 0;
+                    }
+                    
                     $item_total_with_tax = $item_taxable + $gst_calc['total_tax'];
                     
                     // Insert item
@@ -148,10 +158,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $serial_arr = [];
                     if (isset($product['serial_ids']) && !empty($product['serial_ids'])) {
                          $serial_arr = is_array($product['serial_ids']) ? $product['serial_ids'] : explode(',', $product['serial_ids']);
+                         
+                         // Validation: Quantity Mismatch
+                         if (count($serial_arr) != $product['quantity']) {
+                             throw new Exception("Serial count mismatch for {$product['product_name']}. Expected {$product['quantity']}, got " . count($serial_arr));
+                         }
+                         
                          $serial_ids_str = "'" . implode(',', $serial_arr) . "'";
                     }
                     
+                    // Validation: Batch Check
+                    if (isset($product['tracking']) && $product['tracking'] === 'batch' && $batch_id === "NULL") {
+                        // POS might skip this, but strict mode should enforce
+                         throw new Exception("Batch not selected for {$product['product_name']}");
+                    }
+                    
+                    // Validation: Serial Requirement Check
+                    if (isset($product['tracking']) && $product['tracking'] === 'serial' && empty($serial_arr)) {
+                         throw new Exception("Serial numbers missing for {$product['product_name']}");
+                    }
+                    
                     // Insert item with tracking info
+                    $hsn_val = isset($product['hsn_code']) ? $product['hsn_code'] : '';
                     $insert_item = "INSERT INTO invoice_items
                                    (invoice_id, product_id, batch_id, serial_ids, product_name, product_code, hsn_code,
                                     quantity, unit_of_measure, unit_price, item_total, taxable_amount,
@@ -159,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     igst_rate, igst_amount, total_amount)
                                    VALUES
                                    ('{$invoice_id}', '{$product['product_id']}', $batch_id, $serial_ids_str, '{$product['product_name']}',
-                                    '{$product['product_code']}', '{$product['hsn_code']}', '{$product['quantity']}',
+                                    '{$product['product_code']}', '{$hsn_val}', '{$product['quantity']}',
                                     '{$product['unit_of_measure']}', '{$product['unit_price']}', '{$item_total}',
                                     '{$item_taxable}', '{$product['gst_rate']}', '{$gst_calc['cgst_rate']}',
                                     '{$gst_calc['cgst_amount']}', '{$gst_calc['sgst_rate']}', '{$gst_calc['sgst_amount']}',
@@ -196,6 +224,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if (!db_execute($connection, $update_serial)) throw new Exception("Failed to update serial status.");
                             }
                         }
+                    }
+                }
+                
+                // 4. Process Payments (if any, e.g. from POS)
+                $amount_paid = 0;
+                $payment_status = 'unpaid';
+                
+                if (isset($_POST['payment_data']) && !empty($_POST['payment_data'])) {
+                    $payments = json_decode($_POST['payment_data'], true);
+                    
+                    if (is_array($payments) && count($payments) > 0) {
+                        foreach ($payments as $pay) {
+                            $mode = sanitize_sql($connection, $pay['mode']);
+                            $amt = (float)$pay['amount'];
+                            
+                            if ($amt > 0) {
+                                // Create Reference for POS
+                                $ref = 'POS-' . time() . '-' . rand(100,999);
+                                
+                                $pay_query = "INSERT INTO payments (invoice_id, payment_date, payment_amount, payment_method, reference_number, notes)
+                                              VALUES ('$invoice_id', NOW(), '$amt', '$mode', '$ref', 'POS Payment')";
+                                
+                                if (!db_execute($connection, $pay_query)) {
+                                    throw new Exception("Failed to record payment.");
+                                }
+                                $amount_paid += $amt;
+                            }
+                        }
+                    }
+                }
+                
+                // 5. Update Invoice Payment Status
+                $amount_due = $rounded_total - $amount_paid;
+                if ($amount_due < 0) $amount_due = 0; // Handle overpayment (change given) logic if needed, but DB usually stores 0 due.
+                
+                if ($amount_paid >= $rounded_total) {
+                    $payment_status = 'paid';
+                } elseif ($amount_paid > 0) {
+                    $payment_status = 'partial';
+                }
+                
+                // If overpaid in POS (change given), we technically recorded full amount? 
+                // Usually POS logic: Total 100, Paid 500 (Cash), Change 400. 
+                // We should record 100 as paid or 500? 
+                // If we record 500, due is -400.
+                // Revisit POS JS: `calculateBalance` shows Change.
+                // `submitSale` sends the entered amounts.
+                // If user enters 500 for Cash, we record 500.
+                // But accounting wise, we only "kept" 100.
+                // Usually we record the transaction amount (100).
+                // But let's stick to simple logic: Record what is passed. 
+                // If `amount_paid` > `total`, status is paid.
+                // We will clamp `amount_due` at 0.
+                
+                if ($amount_paid > 0) {
+                    $update_inv = "UPDATE invoices SET 
+                                   amount_paid = '$amount_paid',
+                                   amount_due = '$amount_due',
+                                   payment_status = '$payment_status'
+                                   WHERE invoice_id = '$invoice_id'";
+                    if (!db_execute($connection, $update_inv)) {
+                         throw new Exception("Failed to update invoice payment status.");
                     }
                 }
                 
@@ -258,9 +348,10 @@ $products_query = "SELECT product_id, product_code, product_name, hsn_code, unit
 $products_result = db_query($connection, $products_query);
 
 // Fetch company settings
-$company_query = "SELECT company_state_code FROM company_settings LIMIT 1";
+$company_query = "SELECT company_state_code, company_gstin FROM company_settings LIMIT 1";
 $company = db_fetch_one($connection, $company_query);
 $company_state = $company ? ($company['company_state_code'] ?? '27') : '27';
+$company_gstin = $company ? ($company['company_gstin'] ?? '') : '';
 ?>
 
 <!-- ================================================================ -->
@@ -292,18 +383,27 @@ $company_state = $company ? ($company['company_state_code'] ?? '27') : '27';
         <div class="card-body">
             <div class="form-row">
                 <!-- Customer Selection -->
+                <!-- Customer Selection -->
                 <div class="form-group col-md-4">
                     <label for="customer_id" class="form-label">Select Customer *</label>
-                    <select id="customer_id" name="customer_id" class="form-control form-select" required onchange="updateCustomerState()">
-                        <option value="">-- Select Customer --</option>
-                        <?php while ($customer = mysqli_fetch_assoc($customers_result)): ?>
-                            <option value="<?php echo $customer['customer_id']; ?>" 
-                                    data-state="<?php echo $customer['billing_state_code']; ?>">
-                                <?php echo escape_html($customer['customer_name']); ?> 
-                                (<?php echo $customer['customer_type']; ?>)
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
+                    <div class="input-group" style="display:flex;">
+                        <select id="customer_id" name="customer_id" class="form-control form-select" required onchange="updateCustomerState()" style="flex:1;">
+                            <option value="">-- Select Customer (Search Name/Mobile) --</option>
+                            <?php 
+                            // Re-fetch to include phone in display
+                            $cust_res = db_query($connection, "SELECT customer_id, customer_name, phone, customer_type, billing_state_code FROM customers WHERE status = 'active' ORDER BY customer_name");
+                            while ($customer = mysqli_fetch_assoc($cust_res)): 
+                            ?>
+                                <option value="<?php echo $customer['customer_id']; ?>" 
+                                        data-state="<?php echo $customer['billing_state_code']; ?>">
+                                    <?php echo escape_html($customer['customer_name']); ?> 
+                                    <?php echo !empty($customer['phone']) ? "({$customer['phone']})" : ""; ?>
+                                    - <?php echo $customer['customer_type']; ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                        <button type="button" class="btn btn-secondary" onclick="openAddCustModal()" style="margin-left:5px;">+</button>
+                    </div>
                 </div>
                 
                 <!-- Invoice Date -->
@@ -546,6 +646,7 @@ $company_state = $company ? ($company['company_state_code'] ?? '27') : '27';
 let products = [];
 let customerState = '';
 const companyState = '<?php echo $company_state; ?>';
+const companyGSTIN = '<?php echo $company_gstin; ?>';
 
 // Update customer state when customer is selected
 function updateCustomerState() {
@@ -766,11 +867,16 @@ function calculateTotals() {
     let totalGST = 0;
     let gstLabel = 'GST';
     
-    products.forEach(product => {
-        const itemTaxable = (product.quantity * product.unit_price) * (taxableAmount / subtotal);
-        const gstAmount = (itemTaxable * product.gst_rate) / 100;
-        totalGST += gstAmount;
-    });
+    // Only calculate GST if company has GSTIN
+    if (companyGSTIN && companyGSTIN.trim() !== '') {
+        products.forEach(product => {
+            const itemTaxable = (product.quantity * product.unit_price) * (taxableAmount / subtotal);
+            const gstAmount = (itemTaxable * product.gst_rate) / 100;
+            totalGST += gstAmount;
+        });
+    } else {
+        gstLabel = 'Tax (0%)';
+    }
     
     // Determine GST label
     if (customerState && companyState) {
@@ -809,7 +915,90 @@ document.getElementById('invoiceForm').addEventListener('submit', function(e) {
         alert('Please select a customer');
         return false;
     }
-});
+}); // End form listener
+</script>
+
+<!-- Add Customer Modal -->
+<div id="addCustModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:10px; width:350px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top:0;">Add New Customer</h3>
+        
+        <div style="margin-top:15px;">
+            <label style="display:block; font-size:12px; margin-bottom:5px;">Mobile Number *</label>
+            <input type="text" id="newCustMobile" class="form-control">
+        </div>
+        <div style="margin-top:10px;">
+            <label style="display:block; font-size:12px; margin-bottom:5px;">Customer Name *</label>
+            <input type="text" id="newCustName" class="form-control">
+        </div>
+        <div style="margin-top:10px;">
+            <label style="display:block; font-size:12px; margin-bottom:5px;">Address</label>
+            <textarea id="newCustAddr" class="form-control" rows="2"></textarea>
+        </div>
+        
+        <div style="margin-top:20px; text-align:right;">
+            <button type="button" onclick="closeAddCustModal()" class="btn btn-secondary">Cancel</button>
+            <button type="button" onclick="saveNewCustomer()" class="btn btn-primary">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Customer Logic for Create Invoice
+    function openAddCustModal() {
+        document.getElementById('addCustModal').style.display = 'flex';
+        document.getElementById('newCustMobile').focus();
+    }
+    
+    function closeAddCustModal() {
+        document.getElementById('addCustModal').style.display = 'none';
+        document.getElementById('newCustName').value = '';
+        document.getElementById('newCustMobile').value = '';
+        document.getElementById('newCustAddr').value = '';
+    }
+    
+    function saveNewCustomer() {
+        const name = document.getElementById('newCustName').value;
+        const mobile = document.getElementById('newCustMobile').value;
+        const addr = document.getElementById('newCustAddr').value;
+        
+        if (!name || !mobile) { alert('Name and Mobile are required'); return; }
+        
+        // Setup data
+        const formData = new FormData();
+        formData.append('customer_name', name);
+        formData.append('customer_phone', mobile);
+        formData.append('customer_address', addr);
+        
+        fetch('../ajax_add_customer.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Add to select and select it
+                const select = document.getElementById('customer_id');
+                const opt = document.createElement('option');
+                opt.value = data.customer.id;
+                opt.text = data.customer.text + ' - B2C'; 
+                opt.selected = true;
+                select.add(opt);
+                
+                // Trigger change to update state/logic
+                select.value = data.customer.id;
+                if(select.onchange) select.onchange();
+                
+                closeAddCustModal();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error creating customer');
+        });
+    }
 </script>
 
 <?php

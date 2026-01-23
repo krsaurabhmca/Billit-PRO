@@ -19,7 +19,7 @@ require_once 'includes/header.php';
 // --- 1. SALES METRICS ---
 $today_sales = db_fetch_one($connection, "SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE DATE(invoice_date) = CURDATE() AND invoice_status = 'finalized'")['total'];
 $month_sales = db_fetch_one($connection, "SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE MONTH(invoice_date) = MONTH(CURDATE()) AND YEAR(invoice_date) = YEAR(CURDATE()) AND invoice_status = 'finalized'")['total'];
-$total_due   = db_fetch_one($connection, "SELECT COALESCE(SUM(amount_due), 0) as total FROM invoices WHERE payment_status != 'paid' AND invoice_status = 'finalized'")['total'];
+$total_due   = db_fetch_one($connection, "SELECT COALESCE(SUM(amount_due), 0) as total FROM invoices WHERE invoice_status = 'finalized'")['total'];
 
 // --- 2. PURCHASE METRICS ---
 $month_purchases = db_fetch_one($connection, "SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases WHERE MONTH(purchase_date) = MONTH(CURDATE()) AND YEAR(purchase_date) = YEAR(CURDATE())")['total'];
@@ -240,6 +240,7 @@ $recent_purchases = db_fetch_all($connection, "SELECT p.*, s.supplier_name FROM 
 
 <!-- Quick Actions -->
 <div class="quick-actions-row">
+    <a href="invoices/pos.php" class="action-pill"><span style="color:#2563eb">⚡</span> POS Terminal</a>
     <a href="invoices/create_invoice.php" class="action-pill"><span style="color:#2563eb">➕</span> Create Invoice</a>
     <a href="purchases/create_purchase.php" class="action-pill"><span style="color:#ca8a04">📥</span> Record Purchase</a>
     <a href="products/add_product.php" class="action-pill"><span style="color:#059669">📦</span> Add Product</a>

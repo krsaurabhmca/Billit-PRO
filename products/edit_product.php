@@ -38,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_id = sanitize_sql($connection, $_POST['category_id']);
     $supplier_id = !empty($_POST['supplier_id']) ? sanitize_sql($connection, $_POST['supplier_id']) : 'NULL';
     $unit_price = sanitize_sql($connection, $_POST['unit_price']);
+    $gst_rate = sanitize_sql($connection, $_POST['gst_rate']);
+    $hsn_code = sanitize_sql($connection, $_POST['hsn_code']);
     $reorder_level = sanitize_sql($connection, $_POST['reorder_level']);
     $unit_of_measure = sanitize_sql($connection, $_POST['unit_of_measure']);
     $status = sanitize_sql($connection, $_POST['status']);
@@ -63,6 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (!validate_numeric($unit_price) || $unit_price < 0) {
         set_error_message("Valid unit price is required.");
+        $has_error = true;
+    }
+    
+    if (!validate_numeric($gst_rate) || $gst_rate < 0) {
+        set_error_message("Valid GST Rate is required.");
         $has_error = true;
     }
     
@@ -96,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         category_id = '{$category_id}',
                         supplier_id = {$supplier_value},
                         unit_price = '{$unit_price}',
+                        gst_rate = '{$gst_rate}',
+                        hsn_code = '{$hsn_code}',
                         reorder_level = '{$reorder_level}',
                         unit_of_measure = '{$unit_of_measure}',
                         status = '{$status}'
@@ -227,7 +236,7 @@ $suppliers_result = db_query($connection, $suppliers_query);
             
             <!-- Price and Stock Info -->
             <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label for="unit_price" class="form-label">Unit Price (₹) *</label>
                     <input 
                         type="number" 
@@ -241,21 +250,42 @@ $suppliers_result = db_query($connection, $suppliers_query);
                     >
                 </div>
                 
-                <div class="form-group col-md-4">
-                    <label for="current_stock" class="form-label">Current Stock (Read-only)</label>
+                <div class="form-group col-md-3">
+                    <label for="gst_rate" class="form-label">GST Rate (%)</label>
+                    <select id="gst_rate" name="gst_rate" class="form-control">
+                        <option value="0" <?php echo ($product['gst_rate'] == 0) ? 'selected' : ''; ?>>0% (Exempt)</option>
+                        <option value="5" <?php echo ($product['gst_rate'] == 5) ? 'selected' : ''; ?>>5%</option>
+                        <option value="12" <?php echo ($product['gst_rate'] == 12) ? 'selected' : ''; ?>>12%</option>
+                        <option value="18" <?php echo ($product['gst_rate'] == 18) ? 'selected' : ''; ?>>18% (Standard)</option>
+                        <option value="28" <?php echo ($product['gst_rate'] == 28) ? 'selected' : ''; ?>>28%</option>
+                    </select>
+                </div>
+                
+                <div class="form-group col-md-2">
+                    <label for="hsn_code" class="form-label">HSN Code</label>
+                    <input 
+                        type="text" 
+                        id="hsn_code" 
+                        name="hsn_code" 
+                        class="form-control" 
+                        value="<?php echo escape_html($product['hsn_code'] ?? ''); ?>"
+                    >
+                </div>
+                
+                <div class="form-group col-md-2">
+                    <label for="current_stock" class="form-label">Stock</label>
                     <input 
                         type="text" 
                         id="current_stock" 
                         class="form-control" 
-                        value="<?php echo $product['quantity_in_stock'] . ' ' . $product['unit_of_measure']; ?>"
+                        value="<?php echo $product['quantity_in_stock']; ?>"
                         readonly
                         style="background-color: #f5f5f5;"
                     >
-                    <small class="form-text">Use Stock In/Out to modify stock quantity</small>
                 </div>
                 
-                <div class="form-group col-md-4">
-                    <label for="reorder_level" class="form-label">Reorder Level *</label>
+                <div class="form-group col-md-2">
+                    <label for="reorder_level" class="form-label">Reorder Lvl</label>
                     <input 
                         type="number" 
                         id="reorder_level" 

@@ -26,7 +26,7 @@
                     📨 Support
                 </a>
                 <span style="color:#cbd5e1; margin:0 10px 0 20px;">|</span>
-                <span style="color:#94a3b8; font-size:13px;">v1.0.0</span>
+                <span style="color:#94a3b8; font-size:13px;">v<?php echo APP_VERSION; ?></span>
             </div>
         </div>
     </footer>
@@ -55,12 +55,44 @@
                 buttons: [
                     'pageLength',
                     { extend: 'colvis', text: 'Columns' },
-                    'copy', 'csv', 'excel', 'pdf', 'print'
+                    { 
+                        extend: 'copyHtml5', 
+                        text: 'Copy',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    { 
+                        extend: 'csvHtml5', 
+                        text: 'CSV',
+                        titleAttr: 'CSV',
+                        extension: '.csv',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    { 
+                        extend: 'excelHtml5', 
+                        text: 'Excel',
+                        titleAttr: 'Excel',
+                        autoFilter: true,
+                        extension: '.xlsx',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    { 
+                        extend: 'pdfHtml5', 
+                        text: 'PDF',
+                        titleAttr: 'PDF',
+                        extension: '.pdf',
+                        orientation: 'landscape',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    { 
+                        extend: 'print', 
+                        text: 'Print',
+                        exportOptions: { columns: ':visible' }
+                    }
                 ],
                 stateSave: true, 
                 autoWidth: false,
                 responsive: true,
-                processing: true, // Show 'Processing...'
+                processing: true,
                 scrollX: true,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
                 language: {

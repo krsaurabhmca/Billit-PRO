@@ -91,7 +91,7 @@ $invoices_result = db_query($connection, $query);
 $summary_query = "SELECT 
                   COUNT(*) as total_invoices,
                   SUM(CASE WHEN invoice_status = 'finalized' THEN total_amount ELSE 0 END) as total_sales,
-                  SUM(CASE WHEN payment_status = 'unpaid' THEN amount_due ELSE 0 END) as total_due
+                  SUM(CASE WHEN invoice_status = 'finalized' THEN amount_due ELSE 0 END) as total_due
                   FROM invoices
                   WHERE 1=1";
 
@@ -123,6 +123,10 @@ $summary = db_fetch_one($connection, $summary_query);
         Invoice Management
     </h2>
     <div class="page-actions">
+        <a href="pos.php" class="btn btn-dark" style="background:#1e293b; color:white; margin-right:10px;">
+            <span class="btn-icon">⚡</span>
+            POS Terminal
+        </a>
         <a href="create_invoice.php" class="btn btn-primary">
             <span class="btn-icon">+</span>
             Create Invoice
