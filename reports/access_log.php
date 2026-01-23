@@ -29,7 +29,7 @@ $total_result = db_fetch_one($connection, $total_query);
 $total_logs = $total_result['total'];
 $total_pages = ceil($total_logs / $limit);
 
-$query = "SELECT l.*, u.full_name 
+$query = "SELECT l.*, u.full_name, u.username 
           FROM access_logs l 
           LEFT JOIN users u ON l.user_id = u.user_id 
           ORDER BY l.created_at DESC 
@@ -67,15 +67,18 @@ $logs = db_fetch_all($connection, $query);
                 </thead>
                 <tbody>
                     <?php if (count($logs) > 0): ?>
-                        <?php foreach ($logs as $log): ?>
+                        <?php foreach ($logs as $log): 
+                            $username = $log['username'] ?? 'System';
+                            $full_name = $log['full_name'] ?? 'System User';
+                        ?>
                             <tr>
                                 <td style="white-space: nowrap;"><?php echo format_datetime($log['created_at']); ?></td>
                                 <td>
                                     <?php if ($log['user_id']): ?>
-                                        <strong><?php echo escape_html($log['full_name']); ?></strong><br>
-                                        <small class="text-muted">@<?php echo escape_html($log['username']); ?></small>
+                                        <strong><?php echo escape_html($full_name); ?></strong><br>
+                                        <small class="text-muted">@<?php echo escape_html($username); ?></small>
                                     <?php else: ?>
-                                        <span class="text-muted"><?php echo escape_html($log['username']); ?></span>
+                                        <span class="text-muted"><?php echo escape_html($username); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -91,10 +94,6 @@ $logs = db_fetch_all($connection, $query);
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" class="text-center">No logs found.</td>
-                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>

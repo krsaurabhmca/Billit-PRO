@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 23, 2026 at 12:46 AM
+-- Generation Time: Jan 23, 2026 at 09:38 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -38,13 +38,6 @@ CREATE TABLE `access_logs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `access_logs`
---
-
-INSERT INTO `access_logs` (`log_id`, `user_id`, `username`, `action`, `details`, `ip_address`, `user_agent`, `created_at`) VALUES
-(1, 1, 'admin', 'Login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-22 21:52:51');
-
 -- --------------------------------------------------------
 
 --
@@ -65,12 +58,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`category_id`, `category_name`, `description`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'Electronics', 'Electronic devices and accessories', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(2, 'Office Supplies', 'Office stationery and supplies', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(3, 'Furniture', 'Office and home furniture', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(4, 'Hardware', 'Hardware tools and equipment', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(5, 'Software', 'Software licenses and applications', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(6, 'New Cateogry', 'New Cateogry', 'active', '2026-01-22 21:53:25', '2026-01-22 21:53:25');
+(1, 'General', NULL, 'active', '2026-01-23 06:46:32', '2026-01-23 06:46:32');
 
 -- --------------------------------------------------------
 
@@ -108,7 +96,7 @@ CREATE TABLE `company_settings` (
 --
 
 INSERT INTO `company_settings` (`setting_id`, `company_name`, `company_address`, `company_city`, `company_state`, `company_state_code`, `company_pincode`, `company_gstin`, `company_pan`, `company_phone`, `company_email`, `company_logo`, `invoice_prefix`, `invoice_start_number`, `terms_conditions`, `bank_name`, `bank_account_number`, `bank_ifsc`, `bank_branch`, `created_at`, `updated_at`, `invoice_color`) VALUES
-(1, 'OfferPlant', '2B Kumar Bhwan , Umanagar\r\nBazar Samiti, Chapra 841301', 'Chapra', 'Bihar', '10', '841301', '27AAAAA0000A1Z5', '', '+91-9876543210', 'info@yourcompany.com', 'assets/uploads/company_logo_1769122003.png', 'INV', 1, '1. Payment is due within 30 days of invoice date.\r\n2. Please make cheques payable to Your Company Name.\r\n3. Goods once sold will not be taken back.\r\n4. Subject to Mumbai Jurisdiction.', 'UNION BANK OF INDIA', '100301838', 'SBIN010039', 'Main Branch Chapra', '2026-01-22 20:19:28', '2026-01-22 23:04:34', '#433d41');
+(1, 'OfferPlant Technologies', 'Kumar Bhawan Umanagar\r\nNear bazar Samiiti', 'Saran', 'Bihar', '10', '841301', '10AACCO5419Q1ZB', '', '9431426600', 'ask@offerplant.com', 'assets/uploads/company_logo_1769152345.png', 'INV', 1, '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 'State Bank of India', '37215658849', 'SBIN0000054', 'Main Branch Chapra', '2026-01-23 06:46:21', '2026-01-23 07:41:57', '#aa35f8');
 
 -- --------------------------------------------------------
 
@@ -147,11 +135,10 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`customer_id`, `customer_name`, `customer_type`, `contact_person`, `email`, `phone`, `gstin`, `pan`, `billing_address`, `billing_city`, `billing_state`, `billing_state_code`, `billing_pincode`, `shipping_address`, `shipping_city`, `shipping_state`, `shipping_state_code`, `shipping_pincode`, `credit_limit`, `opening_balance`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'ABC Enterprises Pvt Ltd', 'B2B', 'Rajesh Kumar', 'rajesh@abcenterprises.com', '+91-9876543211', '27BBBBB1111B1Z5', NULL, '456 Corporate Avenue', 'Mumbai', 'Maharashtra', '27', '400001', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-22 20:19:28', '2026-01-22 20:19:28'),
-(2, 'XYZ Trading Co', 'B2B', 'Priya Sharma', 'priya@xyztrading.com', '+91-9876543212', '29CCCCC2222C1Z5', NULL, '789 Trade Center', 'Bangalore', 'Karnataka', '29', '560001', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-22 20:19:28', '2026-01-22 20:19:28'),
-(3, 'Walk-in Customer', 'B2C', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-22 20:19:28', '2026-01-22 20:19:28'),
-(4, 'Retail Customer', 'B2C', 'Amit Patel', 'amit@gmail.com', '+91-9876543213', NULL, NULL, '321 Residential Area', 'Mumbai', 'Maharashtra', '27', '400002', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-22 20:19:28', '2026-01-22 20:19:28'),
-(5, 'KUMAR SAURABH', 'B2C', 'KUMAR SAURABH', '', '09431426600', '', NULL, 'Umanagar\r\nChapra saran', 'Chapra', 'Bihar', '10', '841301', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-22 20:28:12', '2026-01-22 20:28:12');
+(1, 'Walk-in Customer', 'B2C', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-23 06:46:39', '2026-01-23 06:46:39'),
+(2, 'Saurabh', 'B2C', NULL, NULL, '9431426600', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-23 07:35:27', '2026-01-23 07:35:27'),
+(3, 'Kumar Saurabh', 'B2C', NULL, NULL, '9431426601', NULL, NULL, 'test', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-23 07:37:14', '2026-01-23 07:37:14'),
+(4, 'Kumar Gaurav', 'B2C', NULL, NULL, '8102930609', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'active', '2026-01-23 08:09:28', '2026-01-23 08:09:28');
 
 -- --------------------------------------------------------
 
@@ -195,10 +182,13 @@ CREATE TABLE `invoices` (
 --
 
 INSERT INTO `invoices` (`invoice_id`, `invoice_number`, `invoice_date`, `customer_id`, `customer_name`, `customer_gstin`, `customer_address`, `customer_state_code`, `subtotal`, `discount_type`, `discount_value`, `discount_amount`, `taxable_amount`, `cgst_amount`, `sgst_amount`, `igst_amount`, `total_tax`, `round_off`, `total_amount`, `amount_paid`, `amount_due`, `payment_status`, `invoice_status`, `notes`, `terms_conditions`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'INV0001', '2026-01-23', 5, 'KUMAR SAURABH', '', 'Umanagar\r\nChapra saran', '10', 349.98, 'percentage', 10.00, 35.00, 314.98, 0.00, 0.00, 56.70, 56.70, 0.32, 372.00, 372.00, 0.00, 'paid', 'finalized', '', '1. Payment is due within 30 days of invoice date.\r\n2. Please make cheques payable to Your Company Name.\r\n3. Goods once sold will not be taken back.\r\n4. Subject to Mumbai Jurisdiction.', 1, '2026-01-22 20:35:55', '2026-01-22 21:07:30'),
-(2, 'INV0002', '2026-01-23', 5, 'KUMAR SAURABH', '', 'Umanagar\r\nChapra saran', '10', 19.99, 'percentage', 10.00, 2.00, 17.99, 0.00, 0.00, 3.24, 3.24, -0.23, 21.00, 21.00, 0.00, 'paid', 'finalized', '', '1. Payment is due within 30 days of invoice date.\r\n2. Please make cheques payable to Your Company Name.\r\n3. Goods once sold will not be taken back.\r\n4. Subject to Mumbai Jurisdiction.', 1, '2026-01-22 22:20:20', '2026-01-22 22:20:33'),
-(3, 'INV0003', '2026-01-23', 5, 'KUMAR SAURABH', '', 'Umanagar\r\nChapra saran', '10', 10000.00, 'percentage', 0.00, 0.00, 10000.00, 0.00, 0.00, 1800.00, 1800.00, 0.00, 11800.00, 11800.00, 0.00, 'paid', 'finalized', '', '1. Payment is due within 30 days of invoice date.\r\n2. Please make cheques payable to Your Company Name.\r\n3. Goods once sold will not be taken back.\r\n4. Subject to Mumbai Jurisdiction.', 1, '2026-01-22 22:37:26', '2026-01-22 22:40:33'),
-(4, 'INV0004', '2026-01-23', 5, 'KUMAR SAURABH', '', 'Umanagar\r\nChapra saran', '10', 10000.00, 'amount', 100.00, 100.00, 9900.00, 891.00, 891.00, 0.00, 1782.00, 0.00, 11682.00, 5000.00, 6682.00, 'partial', 'finalized', '', '1. Payment is due within 30 days of invoice date.\r\n2. Please make cheques payable to Your Company Name.\r\n3. Goods once sold will not be taken back.\r\n4. Subject to Mumbai Jurisdiction.', 1, '2026-01-22 22:51:15', '2026-01-22 22:52:46');
+(1, 'INV0001', '2026-01-23', 1, 'Walk-in Customer', '', '', '', 200.00, 'percentage', 18.00, 36.00, 164.00, 0.00, 0.00, 29.52, 29.52, 0.48, 194.00, 150.00, 44.00, 'partial', 'finalized', '', '', 1, '2026-01-23 06:49:52', '2026-01-23 08:05:59'),
+(2, 'INV0002', '2026-01-23', 1, 'Walk-in Customer', '', '', '', 24000.00, 'percentage', 10.00, 2400.00, 21600.00, 0.00, 0.00, 0.00, 0.00, 0.00, 21600.00, 10000.00, 11600.00, 'partial', 'finalized', '', '', 1, '2026-01-23 06:56:09', '2026-01-23 06:56:30'),
+(3, 'INV0003', '2026-01-23', 1, 'Walk-in Customer', '', '', '', 100.00, 'amount', 0.00, 0.00, 100.00, 0.00, 0.00, 0.00, 0.00, 0.00, 100.00, 0.00, 100.00, 'unpaid', 'finalized', 'POS Sale', '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 1, '2026-01-23 07:24:28', '2026-01-23 07:24:28'),
+(4, 'INV0004', '2026-01-23', 1, 'Walk-in Customer', '', '', '', 100.00, 'amount', 0.00, 0.00, 100.00, 0.00, 0.00, 0.00, 0.00, 0.00, 100.00, 0.00, 100.00, 'unpaid', 'finalized', 'POS Sale', '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 1, '2026-01-23 07:37:52', '2026-01-23 07:37:52'),
+(11, 'INV0005', '2026-01-23', 2, 'Saurabh', '', '', '', 100.00, 'amount', 0.00, 0.00, 100.00, 0.00, 0.00, 12.00, 12.00, 0.00, 112.00, 112.00, 0.00, 'paid', 'finalized', 'POS Sale', '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 1, '2026-01-23 08:19:00', '2026-01-23 08:19:00'),
+(12, 'INV0006', '2026-01-23', 1, 'Walk-in Customer', '', '', '', 24300.00, 'amount', 0.00, 0.00, 24300.00, 0.00, 0.00, 4356.00, 4356.00, 0.00, 28656.00, 28656.00, 0.00, 'paid', 'finalized', 'POS Sale', '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 1, '2026-01-23 08:28:57', '2026-01-23 08:28:57'),
+(13, 'INV0007', '2026-01-23', 2, 'Saurabh', '', '', '', 12000.00, 'percentage', 0.00, 0.00, 12000.00, 0.00, 0.00, 2160.00, 2160.00, 0.00, 14160.00, 12160.00, 2000.00, 'partial', 'finalized', '', '1. term 1\r\n2. term 2 here\r\n3. Terms 3', 1, '2026-01-23 08:31:32', '2026-01-23 08:32:04');
 
 -- --------------------------------------------------------
 
@@ -239,11 +229,14 @@ CREATE TABLE `invoice_items` (
 --
 
 INSERT INTO `invoice_items` (`item_id`, `invoice_id`, `product_id`, `batch_id`, `serial_ids`, `product_name`, `product_code`, `hsn_code`, `description`, `quantity`, `unit_of_measure`, `unit_price`, `item_total`, `discount_percentage`, `discount_amount`, `taxable_amount`, `gst_rate`, `cgst_rate`, `cgst_amount`, `sgst_rate`, `sgst_amount`, `igst_rate`, `igst_amount`, `total_amount`, `created_at`) VALUES
-(2, 1, 7, NULL, NULL, 'Office Chair', 'FURN001', '9401', NULL, 1.00, 'pcs', 149.99, 149.99, 0.00, 0.00, 134.99, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 24.30, 159.29, '2026-01-22 21:06:00'),
-(3, 1, 3, NULL, NULL, 'LED Monitor 24\"', 'ELEC003', '8528', NULL, 1.00, 'pcs', 199.99, 199.99, 0.00, 0.00, 179.99, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 32.40, 212.39, '2026-01-22 21:06:00'),
-(4, 2, 9, NULL, NULL, 'Screwdriver Set', 'HARD001', '8205', NULL, 1.00, 'set', 19.99, 19.99, 0.00, 0.00, 17.99, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 3.24, 21.23, '2026-01-22 22:20:20'),
-(6, 3, 12, NULL, NULL, 'Mobile', 'MOB', '', NULL, 1.00, 'pcs', 10000.00, 10000.00, 0.00, 0.00, 10000.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 1800.00, 11800.00, '2026-01-22 22:39:49'),
-(7, 4, 12, NULL, '3', 'Mobile', 'MOB', '', NULL, 1.00, 'pcs', 10000.00, 10000.00, 0.00, 0.00, 9900.00, 18.00, 9.00, 891.00, 9.00, 891.00, 0.00, 0.00, 11682.00, '2026-01-22 22:51:15');
+(1, 1, 1, NULL, NULL, 'Test', 'PROD289', '', NULL, 2.00, 'pcs', 100.00, 200.00, 0.00, 0.00, 164.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 29.52, 193.52, '2026-01-23 06:49:52'),
+(2, 2, 2, NULL, '2,3', 'Samsung', 'PRD0089', '', NULL, 2.00, 'pcs', 12000.00, 24000.00, 0.00, 0.00, 21600.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 0.00, 21600.00, '2026-01-23 06:56:09'),
+(3, 3, 1, NULL, NULL, 'Test', 'PROD289', '', NULL, 1.00, 'pcs', 100.00, 100.00, 0.00, 0.00, 100.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 0.00, 100.00, '2026-01-23 07:24:28'),
+(4, 4, 1, NULL, NULL, 'Test', 'PROD289', '', NULL, 1.00, 'pcs', 100.00, 100.00, 0.00, 0.00, 100.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 0.00, 100.00, '2026-01-23 07:37:52'),
+(12, 11, 1, NULL, NULL, 'Test', 'PROD289', '', NULL, 1.00, 'pcs', 100.00, 100.00, 0.00, 0.00, 100.00, 12.00, 0.00, 0.00, 0.00, 0.00, 12.00, 12.00, 112.00, '2026-01-23 08:19:00'),
+(13, 12, 1, NULL, NULL, 'Test', 'PROD289', '', NULL, 3.00, 'pcs', 100.00, 300.00, 0.00, 0.00, 300.00, 12.00, 0.00, 0.00, 0.00, 0.00, 12.00, 36.00, 336.00, '2026-01-23 08:28:57'),
+(14, 12, 2, NULL, NULL, 'Samsung', 'PRD0089', '', NULL, 2.00, 'pcs', 12000.00, 24000.00, 0.00, 0.00, 24000.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 4320.00, 28320.00, '2026-01-23 08:28:57'),
+(15, 13, 2, NULL, '4', 'Samsung', 'PRD0089', '', NULL, 1.00, 'pcs', 12000.00, 12000.00, 0.00, 0.00, 12000.00, 18.00, 0.00, 0.00, 0.00, 0.00, 18.00, 2160.00, 14160.00, '2026-01-23 08:31:32');
 
 -- --------------------------------------------------------
 
@@ -282,12 +275,13 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`payment_id`, `invoice_id`, `payment_date`, `payment_method`, `payment_amount`, `reference_number`, `notes`, `created_by`, `created_at`) VALUES
-(1, 1, '2026-01-23', 'cash', 300.00, 'Testt', '', 1, '2026-01-22 21:06:48'),
-(2, 1, '2026-01-23', 'cash', 72.00, 'TXns18/78282', '', 1, '2026-01-22 21:07:30'),
-(3, 2, '2026-01-23', 'cash', 21.00, '', '', 1, '2026-01-22 22:20:33'),
-(4, 3, '2026-01-23', 'upi', 10000.00, 'TXN 238832', '', 1, '2026-01-22 22:40:17'),
-(5, 3, '2026-01-23', 'cash', 1800.00, '', 'All Clear', 1, '2026-01-22 22:40:33'),
-(6, 4, '2026-01-23', 'cash', 5000.00, '', 'Dues 7 do=in me denge', 1, '2026-01-22 22:52:46');
+(1, 2, '2026-01-23', 'cash', 10000.00, '', '', 1, '2026-01-23 06:56:30'),
+(2, 1, '2026-01-23', 'cash', 50.00, '', '', 1, '2026-01-23 07:15:13'),
+(3, 1, '2026-01-23', 'cash', 100.00, '', '', 1, '2026-01-23 08:05:59'),
+(4, 11, '2026-01-23', 'cash', 112.00, 'POS-1769156340-351', 'POS Payment', NULL, '2026-01-23 08:19:00'),
+(5, 12, '2026-01-23', 'cash', 28656.00, 'POS-1769156937-180', 'POS Payment', NULL, '2026-01-23 08:28:57'),
+(6, 13, '2026-01-23', 'upi', 10160.00, '', '', 1, '2026-01-23 08:31:48'),
+(7, 13, '2026-01-23', 'card', 2000.00, '', '', 1, '2026-01-23 08:32:04');
 
 -- --------------------------------------------------------
 
@@ -319,18 +313,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_code`, `product_name`, `hsn_code`, `description`, `category_id`, `supplier_id`, `unit_price`, `gst_rate`, `quantity_in_stock`, `reorder_level`, `unit_of_measure`, `tracking_type`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'ELEC001', 'Wireless Mouse', '8471', 'Ergonomic wireless mouse with USB receiver', 1, 1, 25.99, 18.00, 150, 20, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(2, 'ELEC002', 'USB Keyboard', '8471', 'Standard USB keyboard with numeric keypad', 1, 1, 35.50, 18.00, 80, 15, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(3, 'ELEC003', 'LED Monitor 24\"', '8528', '24-inch Full HD LED monitor', 1, 1, 199.99, 18.00, 44, 10, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 21:06:00'),
-(4, 'OFF001', 'A4 Paper Ream', '4802', '500 sheets white A4 paper', 2, 2, 5.99, 12.00, 200, 50, 'ream', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(5, 'OFF002', 'Ballpoint Pen Blue', '9608', 'Blue ink ballpoint pen', 2, 2, 0.50, 12.00, 500, 100, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(6, 'OFF003', 'Stapler Standard', '8305', 'Standard office stapler', 2, 2, 8.99, 18.00, 75, 15, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(7, 'FURN001', 'Office Chair', '9401', 'Ergonomic office chair with adjustable height', 3, 4, 149.99, 18.00, 29, 5, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 21:06:00'),
-(8, 'FURN002', 'Desk Lamp', '9405', 'LED desk lamp with adjustable arm', 3, 4, 29.99, 18.00, 60, 10, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(9, 'HARD001', 'Screwdriver Set', '8205', '10-piece screwdriver set', 4, 3, 19.99, 18.00, 39, 8, 'set', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 22:20:20'),
-(10, 'HARD002', 'Hammer', '8205', 'Claw hammer with rubber grip', 4, 3, 12.50, 18.00, 35, 10, 'pcs', 'none', 'active', '2026-01-22 20:05:37', '2026-01-22 20:19:28'),
-(11, 'TEst003', 'Test 2', NULL, 'Test', 3, 3, 100.00, 18.00, 100, 10, 'ltr', 'none', 'active', '2026-01-22 20:12:59', '2026-01-22 20:13:22'),
-(12, 'MOB', 'Mobile', NULL, '', 1, NULL, 10000.00, 18.00, 4, 10, 'pcs', 'serial', 'active', '2026-01-22 22:35:15', '2026-01-22 23:33:56');
+(1, 'PROD289', 'Test', '1231233', '', 1, NULL, 100.00, 12.00, 2, 10, 'pcs', 'none', 'active', '2026-01-23 06:46:32', '2026-01-23 08:28:57'),
+(2, 'PRD0089', 'Samsung', NULL, '', 1, 1, 12000.00, 18.00, 0, 10, 'pcs', 'serial', 'active', '2026-01-23 06:52:27', '2026-01-23 08:31:32'),
+(3, 'PRD0090', 'VIVO V9', '25354534', '16GB 256GB Snapdragon', 1, 1, 19000.00, 12.00, 0, 3, 'pcs', 'serial', 'active', '2026-01-23 07:52:50', '2026-01-23 07:52:50');
 
 -- --------------------------------------------------------
 
@@ -373,11 +358,11 @@ CREATE TABLE `product_serials` (
 --
 
 INSERT INTO `product_serials` (`serial_id`, `product_id`, `serial_no`, `purchase_item_id`, `is_sold`, `date_sold`, `invoice_item_id`, `status`, `created_at`) VALUES
-(1, 12, 'SN01', 1, 0, NULL, NULL, 'available', '2026-01-22 22:36:38'),
-(2, 12, 'SN03', 1, 0, NULL, NULL, 'available', '2026-01-22 22:36:38'),
-(3, 12, 'SNO5', 1, 1, '2026-01-23', 7, 'sold', '2026-01-22 22:36:38'),
-(4, 12, 'P1003', 2, 0, NULL, NULL, 'available', '2026-01-22 22:36:38'),
-(5, 12, 'P2004', 2, 0, NULL, NULL, 'available', '2026-01-22 22:36:38');
+(1, 2, 'SN001', 2, 0, NULL, NULL, 'available', '2026-01-23 06:54:13'),
+(2, 2, 'SN002', 2, 1, '2026-01-23', 2, 'sold', '2026-01-23 06:54:13'),
+(3, 2, 'SN005', 2, 1, '2026-01-23', 2, 'sold', '2026-01-23 06:54:13'),
+(4, 2, 'SM009', 2, 1, '2026-01-23', 15, 'sold', '2026-01-23 06:54:13'),
+(5, 2, 'SNO98', 2, 0, NULL, NULL, 'available', '2026-01-23 06:54:13');
 
 -- --------------------------------------------------------
 
@@ -404,7 +389,8 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`purchase_id`, `supplier_id`, `supplier_invoice_no`, `purchase_date`, `total_amount`, `paid_amount`, `payment_status`, `status`, `notes`, `created_at`, `created_by`) VALUES
-(1, 2, '', '2026-01-23', 71000.00, 0.00, 'unpaid', 'received', '', '2026-01-22 22:36:38', 1);
+(1, 1, 'INV-001', '2026-01-23', 1000.00, 0.00, 'unpaid', 'received', '', '2026-01-23 06:48:48', 1),
+(2, 1, 'INV-004/2027', '2026-01-23', 145000.00, 0.00, 'unpaid', 'received', '', '2026-01-23 06:54:13', 1);
 
 -- --------------------------------------------------------
 
@@ -429,8 +415,8 @@ CREATE TABLE `purchase_items` (
 --
 
 INSERT INTO `purchase_items` (`item_id`, `purchase_id`, `product_id`, `quantity`, `unit_cost`, `total_cost`, `batch_no`, `expiry_date`, `serial_numbers`) VALUES
-(1, 1, 12, 3, 13000.00, 39000.00, NULL, NULL, 'SN01,SN03,SNO5'),
-(2, 1, 12, 2, 16000.00, 32000.00, NULL, NULL, 'P1003,P2004');
+(1, 1, 1, 10, 100.00, 1000.00, NULL, NULL, NULL),
+(2, 2, 2, 5, 29000.00, 145000.00, NULL, NULL, 'SN001,SN002,SN005,SM009,SNO98');
 
 -- --------------------------------------------------------
 
@@ -486,13 +472,6 @@ CREATE TABLE `sale_returns` (
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `sale_returns`
---
-
-INSERT INTO `sale_returns` (`return_id`, `return_number`, `invoice_id`, `customer_id`, `return_date`, `subtotal`, `tax_amount`, `total_amount`, `reason`, `created_at`, `created_by`) VALUES
-(3, 'SR-20260123-921', 3, 5, '2026-01-23', 0.00, 0.00, 10000.00, '', '2026-01-22 23:33:56', NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -510,13 +489,6 @@ CREATE TABLE `sale_return_items` (
   `tax_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total_amount` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `sale_return_items`
---
-
-INSERT INTO `sale_return_items` (`id`, `return_id`, `product_id`, `batch_id`, `serial_id`, `quantity`, `unit_price`, `tax_amount`, `total_amount`) VALUES
-(3, 3, 12, NULL, NULL, 1.00, 10000.00, 0.00, 10000.00);
 
 -- --------------------------------------------------------
 
@@ -536,13 +508,6 @@ CREATE TABLE `smtp_settings` (
   `status` enum('active','inactive') NOT NULL DEFAULT 'active',
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `smtp_settings`
---
-
-INSERT INTO `smtp_settings` (`id`, `host`, `port`, `username`, `password`, `encryption`, `from_email`, `from_name`, `status`, `updated_at`) VALUES
-(1, 'smtp.gmail.com', 587, 'your-email@gmail.com', '', 'tls', 'noreply@billit.com', 'Billit Notification', 'active', '2026-01-22 21:49:27');
 
 -- --------------------------------------------------------
 
@@ -569,15 +534,8 @@ CREATE TABLE `stock_transactions` (
 --
 
 INSERT INTO `stock_transactions` (`transaction_id`, `product_id`, `transaction_type`, `quantity`, `unit_price`, `total_amount`, `reference_number`, `notes`, `transaction_date`, `created_by`, `created_at`) VALUES
-(1, 1, 'stock_in', 100, 25.99, 2599.00, 'PO-2026-001', 'Initial stock purchase', '2026-01-15 10:00:00', 1, '2026-01-22 20:05:37'),
-(2, 1, 'stock_in', 50, 25.99, 1299.50, 'PO-2026-002', 'Restock order', '2026-01-20 14:30:00', 1, '2026-01-22 20:05:37'),
-(3, 2, 'stock_in', 80, 35.50, 2840.00, 'PO-2026-003', 'Initial stock purchase', '2026-01-15 10:00:00', 1, '2026-01-22 20:05:37'),
-(4, 3, 'stock_in', 50, 199.99, 9999.50, 'PO-2026-004', 'Initial stock purchase', '2026-01-16 11:00:00', 1, '2026-01-22 20:05:37'),
-(5, 3, 'stock_out', 5, 199.99, 999.95, 'SO-2026-001', 'Sales order', '2026-01-22 09:15:00', 2, '2026-01-22 20:05:37'),
-(6, 4, 'stock_in', 200, 5.99, 1198.00, 'PO-2026-005', 'Bulk paper order', '2026-01-17 13:00:00', 1, '2026-01-22 20:05:37'),
-(7, 5, 'stock_in', 500, 0.50, 250.00, 'PO-2026-006', 'Pen bulk order', '2026-01-18 15:00:00', 1, '2026-01-22 20:05:37'),
-(8, 12, 'stock_in', 3, 13000.00, 39000.00, 'PUR-1', 'Purchase received', '2026-01-23 00:00:00', NULL, '2026-01-22 22:36:38'),
-(9, 12, 'stock_in', 2, 16000.00, 32000.00, 'PUR-1', 'Purchase received', '2026-01-23 00:00:00', NULL, '2026-01-22 22:36:38');
+(1, 1, 'stock_in', 10, 100.00, 1000.00, 'PUR-1', 'Purchase received', '2026-01-23 00:00:00', NULL, '2026-01-23 06:48:48'),
+(2, 2, 'stock_in', 5, 29000.00, 145000.00, 'PUR-2', 'Purchase received', '2026-01-23 00:00:00', NULL, '2026-01-23 06:54:13');
 
 -- --------------------------------------------------------
 
@@ -604,10 +562,7 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `contact_person`, `email`, `phone`, `address`, `city`, `country`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'Tech Solutions Ltd', 'John Smith', 'john@techsolutions.com', '+1-555-0101', '123 Tech Street', 'New York', 'USA', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(2, 'Office Depot Inc', 'Sarah Johnson', 'sarah@officedepot.com', '+1-555-0102', '456 Supply Avenue', 'Chicago', 'USA', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(3, 'Global Hardware Co', 'Mike Wilson', 'mike@globalhardware.com', '+1-555-0103', '789 Hardware Road', 'Los Angeles', 'USA', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37'),
-(4, 'Premium Furniture', 'Emily Brown', 'emily@premiumfurniture.com', '+1-555-0104', '321 Furniture Lane', 'Boston', 'USA', 'active', '2026-01-22 20:05:37', '2026-01-22 20:05:37');
+(1, 'Hardware Solution', '', '', '', '', '', '', 'active', '2026-01-23 06:48:09', '2026-01-23 06:48:09');
 
 -- --------------------------------------------------------
 
@@ -944,13 +899,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `access_logs`
 --
 ALTER TABLE `access_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `company_settings`
@@ -962,19 +917,19 @@ ALTER TABLE `company_settings`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `invoice_items`
 --
 ALTER TABLE `invoice_items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -986,13 +941,13 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `product_batches`
@@ -1010,7 +965,7 @@ ALTER TABLE `product_serials`
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `purchase_items`
@@ -1034,31 +989,31 @@ ALTER TABLE `purchase_return_items`
 -- AUTO_INCREMENT for table `sale_returns`
 --
 ALTER TABLE `sale_returns`
-  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sale_return_items`
 --
 ALTER TABLE `sale_return_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `smtp_settings`
 --
 ALTER TABLE `smtp_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
 --
 ALTER TABLE `stock_transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`

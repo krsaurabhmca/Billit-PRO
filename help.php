@@ -45,6 +45,7 @@ require_once 'includes/header.php';
                 <a href="#inventory">📦 Inventory & Products</a>
                 <a href="#tracking">🔢 Batch & Serial Tracking</a>
                 <a href="#sales">🧾 Sales & Invoicing</a>
+                <a href="#pos">⚡ POS Terminal</a>
                 <a href="#purchases">📥 Purchases & Stock In</a>
                 <a href="#reports">📈 Reports & Analytics</a>
                 <a href="#settings">⚙️ Settings & Branding</a>
@@ -129,6 +130,20 @@ require_once 'includes/header.php';
             </ol>
             <h3>Payments</h3>
             <p>After creating an invoice, click "Add Payment" to record cash/bank receipts. Invoices can be "Partial", "Paid", or "Unpaid".</p>
+        </div>
+
+        <!-- 5.5 POS System -->
+        <div id="pos" class="help-section">
+            <h2>⚡ POS (Point of Sale) System</h2>
+            <p>The <strong>POS Terminal</strong> is designed for high-speed retail billing.</p>
+            <ul>
+                <li><strong>Fast Lookup:</strong> Scan barcodes or type product names to instantly add items to the cart.</li>
+                <li><strong>Walk-in Customers:</strong> Quickly add a new customer with just a Name and Mobile number without leaving the screen.</li>
+                <li><strong>Discounts:</strong> Direct discount entry on the billing screen.</li>
+                <li><strong>Stock Validation:</strong> Prevents billing of out-of-stock items (alerts immediately).</li>
+                <li><strong>Multi-Mode Payment:</strong> Split bills easily! (e.g. ₹500 Cash + ₹500 UPI). Supports Cash, Card, UPI, Cheque, etc.</li>
+                <li><strong>Printing:</strong> Supports standard **A4 PDF** invoices as well as **3-Inch Thermal Receipts** for retail counters.</li>
+            </ul>
         </div>
 
         <!-- 6. Purchases -->

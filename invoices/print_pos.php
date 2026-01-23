@@ -99,7 +99,7 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
         
         .no-print { display: none; }
         @media print {
-            .btn-print { display: none; }
+            .btn-print, .no-print, #printBtn { display: none !important; }
         }
         
         .btn-print { 
@@ -109,7 +109,7 @@ $theme_color = !empty($company['invoice_color']) ? $company['invoice_color'] : '
     </style>
 </head>
 <body>
-    <a href="javascript:window.print()" class="btn-print">Print Receipt</a>
+    <a href="javascript:window.print()" id="printBtn" class="btn-print">Print Receipt</a>
 
     <div class="header text-center">
         <div class="store-name"><?php echo escape_html($company['company_name']); ?></div>
